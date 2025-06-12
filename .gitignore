@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Google Client Secret
+client_secret_reply_robin.json
+
+# Client tokens
+tokens/*
+
+# Env
+.env
+
+# Macintosh Specfic 
+.DS_Store
