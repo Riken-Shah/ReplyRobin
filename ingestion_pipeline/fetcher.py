@@ -267,14 +267,15 @@ class Fetcher:
             except Exception:
                 pass  # fall back to regex below if parser fails
 
+        # We might need quoted and reply headers for chatracter profiling, so keeping them for now.
         # --- Minimal regex fallback ---
-        # Drop everything after typical reply header
-        text = re.split(r"\nOn .*wrote:", text)[0]
-        # Remove quoted lines beginning with '>'
-        text = "\n".join(
-            line for line in text.splitlines() if not line.lstrip().startswith(">")
-        )
-        # Remove signature separator "-- " or "--\n"
-        text = text.split("\n--\n")[0].split("\n-- \n")[0]
+        # # Drop everything after typical reply header
+        # text = re.split(r"\nOn .*wrote:", text)[0]
+        # # Remove quoted lines beginning with '>'
+        # text = "\n".join(
+        #     line for line in text.splitlines() if not line.lstrip().startswith(">")
+        # )
+        # # Remove signature separator "-- " or "--\n"
+        # text = text.split("\n--\n")[0].split("\n-- \n")[0]
 
         return text.strip()
