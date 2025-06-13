@@ -1,6 +1,5 @@
 # Standard Library
 from datetime import datetime
-from pickle import FALSE
 from typing import List
 import base64  # Added for decoding message bodies
 import re  # For regex fallback cleaning
@@ -10,12 +9,6 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from bs4 import BeautifulSoup
-from sqlmodel import TIMESTAMP  # Added for HTML to text conversion
-
-try:
-    from email_reply_parser import EmailReplyParser  # Best-in-class quoted-text remover
-except ImportError:  # Optional dependency
-    EmailReplyParser = None
 
 # Local Modules
 from ingestion_pipeline.db import DB
@@ -98,6 +91,9 @@ class Fetcher:
                     thread_models.append(thread_obj)
 
                     for msg in messages:
+                        # Extract all header information using the comprehensive function
+                        header_info = self._extract_comprehensive_headers(msg)
+
                         message_obj = Message(
                             id=msg["id"],
                             thread_id=thread_detail["id"],
@@ -108,11 +104,20 @@ class Fetcher:
                                 / 1000  # Convert ms to seconds
                             ),
                             size_estimate=msg.get("sizeEstimate", 0),
-                            body=self._parse_payload_to_text(
-                                msg["payload"]
-                            ),  # Consider decoding this
+                            body=self._parse_payload_to_text(msg["payload"]),
+                            # Email header fields
+                            subject=header_info.get("subject"),
+                            sender=header_info.get("sender"),
+                            reply_to=header_info.get("reply_to"),
+                            recipients=header_info.get("recipients", []),
+                            cc_recipients=header_info.get("cc_recipients", []),
+                            bcc_recipients=header_info.get("bcc_recipients", []),
+                            # Additional metadata
+                            message_id=header_info.get("message_id"),
+                            references=header_info.get("references", []),
+                            in_reply_to=header_info.get("in_reply_to"),
+                            importance=header_info.get("importance"),
                         )
-                        print(message_obj.internal_date)
                         message_models.append(message_obj)
 
                 except HttpError as thr_err:
@@ -255,27 +260,122 @@ class Fetcher:
     def _clean_email_body(text: str) -> str:
         """Strip quoted replies and signatures from *text*.
 
-        Preference order:
-        1.  Use `email_reply_parser` when available – handles reply headers,
-            quotation, signatures.
-        2.  Regex fallback for environments where the package is missing.
+        Approach:
+        1.  Regex fallback as a safety net if talon processing fails
         """
 
-        if EmailReplyParser is not None:
-            try:
-                text = EmailReplyParser.read(text)
-            except Exception:
-                pass  # fall back to regex below if parser fails
-
-        # We might need quoted and reply headers for chatracter profiling, so keeping them for now.
+        # We might need quoted and reply headers for character profiling, but we'll
+        # provide a way to remove them if desired
         # --- Minimal regex fallback ---
-        # # Drop everything after typical reply header
-        # text = re.split(r"\nOn .*wrote:", text)[0]
-        # # Remove quoted lines beginning with '>'
-        # text = "\n".join(
-        #     line for line in text.splitlines() if not line.lstrip().startswith(">")
-        # )
-        # # Remove signature separator "-- " or "--\n"
-        # text = text.split("\n--\n")[0].split("\n-- \n")[0]
+        # Drop everything after typical reply header
+        text = re.split(r"\nOn .*wrote:", text)[0]
+        # Remove quoted lines beginning with '>'
+        text = "\n".join(
+            line for line in text.splitlines() if not line.lstrip().startswith(">")
+        )
+        # Remove signature separator "-- " or "--\n"
+        text = text.split("\n--\n")[0].split("\n-- \n")[0]
 
         return text.strip()
+
+    @staticmethod
+    def _extract_email_from_header(header_value: str) -> str:
+        """Extract email from a header value in the format: 'Name <email@example.com>'"""
+        if not header_value:
+            return ""
+
+        # Find the part in angle brackets
+        match = re.search(r"<([^>]+)>", header_value)
+        if match:
+            return match.group(1)  # Return just the email part
+        return header_value  # Return the whole value if no angle brackets
+
+    @staticmethod
+    def _extract_comprehensive_headers(message: dict) -> dict:
+        """Extract all relevant headers from an email message.
+
+        This function extracts email headers including:
+        - Subject
+        - Sender
+        - Reply-To
+        - Recipients (To)
+        - CC Recipients
+        - BCC Recipients (when available)
+        - Message-ID
+        - References
+        - In-Reply-To
+        - Importance/Priority
+
+        Args:
+            message (dict): The message object from Gmail API
+
+        Returns:
+            dict: Dictionary containing all extracted header fields
+        """
+        headers = {}
+        payload = message.get("payload", {})
+        message_headers = payload.get("headers", [])
+
+        # Initialize lists for array fields
+        headers["recipients"] = []
+        headers["cc_recipients"] = []
+        headers["bcc_recipients"] = []
+        headers["references"] = []
+
+        # Extract header values
+        for header in message_headers:
+            name = header.get("name", "").lower()
+            value = header.get("value", "")
+
+            if name == "subject":
+                headers["subject"] = value
+            elif name == "from":
+                headers["sender"] = Fetcher._extract_email_from_header(value)
+            elif name == "reply-to":
+                headers["reply_to"] = Fetcher._extract_email_from_header(value)
+            elif name == "to":
+                # Split multiple recipients and extract emails
+                recipients = [
+                    Fetcher._extract_email_from_header(r.strip())
+                    for r in value.split(",")
+                    if r.strip()
+                ]
+                headers["recipients"] = recipients
+            elif name == "cc":
+                cc_recipients = [
+                    Fetcher._extract_email_from_header(r.strip())
+                    for r in value.split(",")
+                    if r.strip()
+                ]
+                headers["cc_recipients"] = cc_recipients
+            elif name == "bcc":
+                bcc_recipients = [
+                    Fetcher._extract_email_from_header(r.strip())
+                    for r in value.split(",")
+                    if r.strip()
+                ]
+                headers["bcc_recipients"] = bcc_recipients
+            elif name == "message-id":
+                # Remove angle brackets if present
+                msg_id = value.strip()
+                if msg_id.startswith("<") and msg_id.endswith(">"):
+                    msg_id = msg_id[1:-1]
+                headers["message_id"] = msg_id
+            elif name == "references":
+                # Split multiple references and clean them
+                refs = [ref.strip() for ref in value.split() if ref.strip()]
+                # Remove angle brackets if present
+                refs = [
+                    ref[1:-1] if ref.startswith("<") and ref.endswith(">") else ref
+                    for ref in refs
+                ]
+                headers["references"] = refs
+            elif name == "in-reply-to":
+                in_reply_to = value.strip()
+                if in_reply_to.startswith("<") and in_reply_to.endswith(">"):
+                    in_reply_to = in_reply_to[1:-1]
+                headers["in_reply_to"] = in_reply_to
+            elif name in ("importance", "x-priority", "priority"):
+                headers["importance"] = value
+
+        return headers

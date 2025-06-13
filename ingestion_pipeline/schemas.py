@@ -31,6 +31,22 @@ class Message(SQLModel, table=True):
     size_estimate: int
     body: str
 
+    # Email header fields
+    subject: Optional[str] = None
+    sender: Optional[str] = None
+    reply_to: Optional[str] = None
+    recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))  # To field
+    cc_recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    bcc_recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+
+    # Additional useful email metadata
+    message_id: Optional[str] = None  # Original Message-ID from email header
+    references: List[str] = Field(
+        default=[], sa_column=Column(ARRAY(TEXT))
+    )  # For threading
+    in_reply_to: Optional[str] = None  # Message this is replying to
+    importance: Optional[str] = None  # Priority/Importance of the email
+
 
 # --- Non-table models for data processing ---
 
