@@ -90,6 +90,8 @@ class Fetcher:
                     )
                     thread_models.append(thread_obj)
 
+                    previous_message_id = None
+
                     for msg in messages:
                         # Extract all header information using the comprehensive function
                         header_info = self._extract_comprehensive_headers(msg)
@@ -117,8 +119,11 @@ class Fetcher:
                             references=header_info.get("references", []),
                             in_reply_to=header_info.get("in_reply_to"),
                             importance=header_info.get("importance"),
+                            parent_message_id=previous_message_id,
                         )
                         message_models.append(message_obj)
+
+                        previous_message_id = message_obj.id
 
                 except HttpError as thr_err:
                     print(f"Failed to fetch thread {ref['id']}: {thr_err}")

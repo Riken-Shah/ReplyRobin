@@ -46,6 +46,7 @@ class Message(SQLModel, table=True):
     )  # For threading
     in_reply_to: Optional[str] = None  # Message this is replying to
     importance: Optional[str] = None  # Priority/Importance of the email
+    parent_message_id: Optional[str] = None  # Points to parent message id
 
 
 # --- Non-table models for data processing ---
