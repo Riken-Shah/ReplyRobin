@@ -2,9 +2,11 @@ from datetime import datetime
 from dotenv import load_dotenv
 from sqlmodel import Session
 
-from ingestion_pipeline.db import DB
+from common.db import DB
 from ingestion_pipeline.fetcher import Fetcher
-from ingestion_pipeline.schemas import Org
+from data_enrichment.processor import Processor
+from common.schemas import Org, Message
+from sqlmodel import select
 from local_auth.auth import get_user_credentials_file
 
 
@@ -61,3 +63,21 @@ if __name__ == "__main__":
     print("\nStarting fetch process...")
     fetcher.initial_fetch()
     print("\nFetch process complete.")
+
+    # 5. Initialize Processor with the DB instance and the Org object
+    processor = Processor(db, org)
+
+    new_messages = []
+    # Get messages from the database
+    with db.session_scope() as session:
+        result = session.exec(select(Message))
+        msgs = result.all()
+
+        for msg in msgs:
+            print(msg.model_dump())
+            new_messages.append(Message(**msg.model_dump()))
+
+    # 6. Run the process process
+    print("\nStarting process process...")
+    processor.process(new_messages)
+    print("\nProcess process co mplete.")

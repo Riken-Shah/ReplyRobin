@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from contextlib import contextmanager
 
 # This line is crucial for SQLModel to discover the table models.
-from ingestion_pipeline.schemas import *
+from common.schemas import *
 
 load_dotenv()
 

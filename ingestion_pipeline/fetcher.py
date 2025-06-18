@@ -11,8 +11,8 @@ from googleapiclient.errors import HttpError
 from bs4 import BeautifulSoup
 
 # Local Modules
-from ingestion_pipeline.db import DB
-from ingestion_pipeline.schemas import Org, Thread, Message
+from common.db import DB
+from common.schemas import Org, Thread, Message
 
 SCOPES: List[str] = ["https://www.googleapis.com/auth/gmail.readonly"]
 
