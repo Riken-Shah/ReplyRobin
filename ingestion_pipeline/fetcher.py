@@ -9,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from bs4 import BeautifulSoup
+from datetime import timezone
 
 # Local Modules
 from common.db import DB
@@ -42,6 +43,8 @@ class Fetcher:
             creds = Credentials.from_authorized_user_file(self.org.creds_file, SCOPES)
             self.service = build("gmail", "v1", credentials=creds)
 
+        self.__inital_sync = self.org.thread_page_token is None
+
     def initial_fetch(self) -> List[Thread]:
         """
         This function is responsible for fetching all the inital emails from the org provided gmail.
@@ -50,23 +53,30 @@ class Fetcher:
         print("Fetching emails for org:", self.org.name)
 
         query_parts: List[str] = ["from:me"]
-        if self.org.end_date:
-            query_parts.append(f"after:{self.org.end_date.strftime('%Y-%m-%d')}")
         if self.org.preferred_emails:
             senders_query = " ".join(self.org.preferred_emails)
             query_parts.append(f"from:{senders_query}")
+
+        if self.org.end_date:
+            query_parts.append(f"after:{self.org.end_date.strftime('%Y-%m-%d')}")
+
         query: str = " ".join(query_parts)
 
         try:
             # ---- Thread listing with pagination + retries ----
             thread_refs: list[dict] = []
-            page_token: str | None = None
+            page_token: str | None = self.org.thread_page_token
             fetched = 0
+            last_page_token = None # Store not-null page token
             while True:
                 page_refs, page_token = self._list_threads(query, page_token)
                 thread_refs.extend(page_refs)
                 fetched += len(page_refs)
-                if not page_token or fetched >= self.org.max_thread_count:
+                if page_token:
+                    last_page_token = page_token
+                if not page_token or (
+                    self.__inital_sync and fetched >= self.org.max_thread_count
+                ):
                     break
             print(f"Found {len(thread_refs)} candidate threads")
 
@@ -87,6 +97,7 @@ class Fetcher:
                         message_count=len(messages),
                         last_synced_at=datetime.utcnow(),
                         history_id=int(thread_detail.get("historyId", 0)),
+                        org_id=self.org.get_id(),
                     )
                     thread_models.append(thread_obj)
 
@@ -98,6 +109,7 @@ class Fetcher:
 
                         message_obj = Message(
                             id=msg["id"],
+                            org_id=self.org.get_id(),
                             thread_id=thread_detail["id"],
                             label_ids=msg.get("labelIds", []),
                             history_id=msg.get("historyId", ""),
@@ -146,6 +158,12 @@ class Fetcher:
                 if message_models:
                     print(f"Persisted {len(message_models)} messages.")
 
+                self.org.last_synced_at = datetime.now(timezone.utc)
+                if last_page_token:
+                    self.org.thread_page_token = last_page_token
+                session.add(self.org)
+                session.commit()
+
             return thread_models
 
         except HttpError as error:
@@ -165,10 +183,13 @@ class Fetcher:
                 req = (
                     self.service.users()
                     .threads()
-                    .list(userId="me", maxResults=self.org.max_thread_count, q=query)
+                    .list(
+                        userId="me",
+                        maxResults=self.org.max_thread_count,
+                        q=query,
+                        pageToken=page_token,
+                    )
                 )
-                if page_token:
-                    req = req.pageToken(page_token)
                 resp = req.execute()
                 return resp.get("threads", []), resp.get("nextPageToken")
             except HttpError as err:

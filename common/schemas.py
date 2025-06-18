@@ -44,7 +44,13 @@ class Org(SQLModel, table=True):
     preferred_emails: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
     email: str = Field(primary_key=True, index=True)
     creds_file: str
-    initial_fetch: bool = False
+    last_synced_at: Optional[datetime] = None
+    thread_page_token: Optional[str] = (
+        None  # Record the page token for the last thread fetch, help us to sync the threads
+    )
+
+    def get_id(self):
+        return self.email
 
 
 class Thread(SQLModel, table=True):
@@ -52,10 +58,12 @@ class Thread(SQLModel, table=True):
     message_count: int
     last_synced_at: datetime
     history_id: int
+    org_id: str = Field(foreign_key="org.email")
 
 
 class Message(SQLModel, table=True):
     id: str = Field(primary_key=True)
+    org_id: str = Field(foreign_key="org.email")
     thread_id: str = Field(foreign_key="thread.id")
     label_ids: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
     history_id: str

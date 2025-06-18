@@ -19,9 +19,13 @@ class Processor:
 
         self.model_name = "gemini-1.5-flash"
         self.__gemini_api_key = getenv("GEMNI_API_KEY")
-        self.intent_extractor = IntentExtractor(model=self.model_name, api_key=self.__gemini_api_key)
+        self.intent_extractor = IntentExtractor(
+            model=self.model_name, api_key=self.__gemini_api_key
+        )
 
-        self.stylometry_signal_extractor = StyloMetrySignalExtractor(model=self.model_name, api_key=self.__gemini_api_key)
+        self.stylometry_signal_extractor = StyloMetrySignalExtractor(
+            model=self.model_name, api_key=self.__gemini_api_key
+        )
 
     def process(self, msgs: List[Message]):
         """

@@ -40,21 +40,19 @@ if __name__ == "__main__":
     # 1. Initialize DB (triggers auto-migration in dev mode)
     db = DB()
 
-    email_to_test = "rikenshah.02@gmail.com"
+    test_email = "rikenshah.02@gmail.com"
+
     print("Starting Gmail API Auth...")
-    creds_file = get_user_credentials_file(email_to_test)
+    creds_file = get_user_credentials_file(test_email)
     print("Creds file: ", creds_file)
 
     # 2. Get a session and create/update the Org object in the database
-    # with next(db.get_session()) as session:
-    #     org = create_or_update_org(session, email=email_to_test, creds_file=creds_file)
-    org = Org(
-        name="Test Org",
-        end_date=datetime(2024, 1, 1),
-        email=email_to_test,
-        creds_file=creds_file,
-        max_thread_count=10,
-    )
+    org = None
+    with next(db.get_session()) as session:
+        org = create_or_update_org(session, email=test_email, creds_file=creds_file)
+
+    if not org:
+        raise Exception("Org not found")
 
     # 3. Initialize Fetcher with the DB instance and the Org object
     fetcher = Fetcher(db, org)
@@ -64,20 +62,20 @@ if __name__ == "__main__":
     fetcher.initial_fetch()
     print("\nFetch process complete.")
 
-    # 5. Initialize Processor with the DB instance and the Org object
-    processor = Processor(db, org)
+    # # 5. Initialize Processor with the DB instance and the Org object
+    # processor = Processor(db, org)
 
-    new_messages = []
-    # Get messages from the database
-    with db.session_scope() as session:
-        result = session.exec(select(Message))
-        msgs = result.all()
+    # new_messages = []
+    # # Get messages from the database
+    # with db.session_scope() as session:
+    #     result = session.exec(select(Message))
+    #     msgs = result.all()
 
-        for msg in msgs:
-            print(msg.model_dump())
-            new_messages.append(Message(**msg.model_dump()))
+    #     for msg in msgs:
+    #         print(msg.model_dump())
+    #         new_messages.append(Message(**msg.model_dump()))
 
-    # 6. Run the process process
-    print("\nStarting process process...")
-    processor.process(new_messages)
-    print("\nProcess process co mplete.")
+    # # 6. Run the process process
+    # print("\nStarting process process...")
+    # processor.process(new_messages)
+    # print("\nProcess process co mplete.")
