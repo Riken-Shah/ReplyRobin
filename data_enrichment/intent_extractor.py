@@ -8,6 +8,7 @@ from common.schemas import Message
 from typing import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 import uuid
+import time
 
 
 class Example(TypedDict):
@@ -81,7 +82,7 @@ class IntentExtractor:
         # Initialize LLM
         if "gemini" in model:
             self.__llm = ChatGoogleGenerativeAI(model=model, api_key=api_key)
-            self.__batch_size = 2
+            self.__batch_size = 10
         else:
             pass
             # self.__llm = ChatOpenAI(model=model, api_key=api_key)
@@ -143,6 +144,11 @@ class IntentExtractor:
         """
         Extract intents from the messages.
         """
+        # Filter out messages that already have intents
+        msgs = [msg for msg in msgs if not msg.intents]
+        if len(msgs) == 0:
+            return msgs
+
         # Batch messages
         batched_msgs = [
             msgs[i : i + self.__batch_size]
@@ -169,6 +175,9 @@ class IntentExtractor:
                         for intent in result.extracted_intents
                     }
                 )
+
+            # Add a delay to avoid rate limiting
+            time.sleep(1.5)
 
         for msg in msgs:
             if msg.id in intent_map:

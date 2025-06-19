@@ -10,7 +10,7 @@ class StylometrySignalsFromMessage(BaseModel):
     message_id: str = Field(default=None)
 
     tone: Optional[ToneEnum] = Field(
-        None,
+        ToneEnum.NEUTRAL,
         description="Overall tone of the message, such as friendly, formal, or urgent",
     )
 
@@ -90,32 +90,12 @@ class ExtractedStylometrySignals(BaseModel):
 # === Stylometry Examples ===
 STYLOMETRY_EXAMPLES = [
     (
-        """Message ID: example_1: Message:Hey Nelly,
+        """Message ID: example_1: Message:Thanks for sharing and spotting that Paul. v1.0.1 which is now live on the App Store fixes it. 
+So silly of me to miss it! 
 
-It looks like there's an issue with delivering the OTP to you. Can you make sure you have your country code mentioned with your phone number? E.g. +27XXXXXXXXXX. 
+Hope you're enjoying the app and its experience!
 
-If you don't get an SMS, as a backup, we attempt to send it via WhatsApp if the SMS fails. Would you be open to installing WhatsApp and receiving the OTP there instead?
-
-Unfortunately, this happens randomly and is beyond our control at the moment, as we don't have a dedicated South African number—this increases the chances of SMS OTPs failing.""",
-        ExtractedStylometrySignals(
-            extracted_stylometry_signals=[
-                StylometrySignalsFromMessage(
-                    message_id="example_1",
-                    tone=ToneEnum.FRIENDLY,
-                    greeting_phrases=["Hey Nelly"],
-                    politeness_markers=["Can you make sure", "Would you be open to"],
-                    modal_verbs=["can", "would"],
-                    hedge_words=["might", "randomly"],
-                    mitigating_phrases=["just"],
-                    urgency_phrases=["as a backup"],
-                    question_phrases=["Can you make sure", "Would you be open to"],
-                    abbreviation_usage=["OTP", "SMS"],
-                ),
-            ],
-        ),
-    ),
-    (
-        """Message ID: example_2: Message:Hey Pulin, I spent almost 6 hours on this, but it keeps failing with an obscure error.
+Message ID: example_2: Message:Hey Pulin, I spent almost 6 hours on this, but it keeps failing with an obscure error.
 
 I'm afraid it might not be a quick fix, so I'll let it be and see if the solution comes naturally (it usually does).
 
@@ -124,20 +104,52 @@ I'm working on a shortcut that asks for the contact first and then the text as t
 Apologies for the inconvenience. The code used to work, but it stopped working with a recent iOS version.
 
 Regards,
-Mustafa Yusuf""",
+Mustafa Yusuf
+""",
         ExtractedStylometrySignals(
             extracted_stylometry_signals=[
                 StylometrySignalsFromMessage(
+                    message_id="example_1",
+                    tone=ToneEnum.FRIENDLY,
+                    greeting_phrases=["Thanks for sharing"],
+                    politeness_markers=["Thanks"],
+                    modal_verbs=[],
+                    hedge_words=[],
+                    boosters=[],
+                    mitigating_phrases=["so silly of me", "Hope"],
+                    urgency_phrases=[],
+                    filler_words=["so"],
+                    question_phrases=[],
+                    sentence_starters=["Thanks for sharing", "Hope you’re enjoying"],
+                    passive_voice_patterns=["is now live on the App Store"],
+                    abbreviation_usage=["v1.0.1"],
+                    discourse_markers=[],
+                ),
+                StylometrySignalsFromMessage(
                     message_id="example_2",
-                    tone=ToneEnum.URGENT,
+                    tone=ToneEnum.APOLOGETIC,
                     greeting_phrases=["Hey Pulin"],
-                    hedge_words=["might", "usually"],
-                    modal_verbs=["might", "could"],
-                    mitigating_phrases=["just", "almost"],
-                    sentence_starters=["I'm afraid", "Apologies"],
-                    passive_voice_patterns=["it keeps failing", "it stopped working"],
-                    discourse_markers=["so"],
-                    filler_words=["so", "just"],
+                    politeness_markers=["Apologies"],
+                    modal_verbs=["might", "will", "hope"],
+                    hedge_words=["almost", "usually"],
+                    boosters=[],
+                    mitigating_phrases=["I'm afraid", "might not", "let it be"],
+                    urgency_phrases=[],
+                    filler_words=["so"],
+                    question_phrases=[],
+                    sentence_starters=[
+                        "Hey Pulin",
+                        "I'm afraid",
+                        "I'm working on",
+                        "Apologies for the inconvenience",
+                    ],
+                    passive_voice_patterns=[
+                        "it keeps failing",
+                        "it used to work",
+                        "it stopped working",
+                    ],
+                    abbreviation_usage=["iOS"],
+                    discourse_markers=[],
                 ),
             ],
         ),
@@ -158,26 +170,9 @@ Please note, tasks created in Karo don't sync to Apple Reminders to avoid duplic
 Let us know if you have any other questions or feedback. Wishing you a fantastic end to 2024 and a happy, prosperous new year, Jihad!
 
 Best regards,
-Mustafa""",
-        ExtractedStylometrySignals(
-            extracted_stylometry_signals=[
-                StylometrySignalsFromMessage(
-                    message_id="example_3",
-                    tone=ToneEnum.FRIENDLY,
-                    greeting_phrases=["Hi Jihad"],
-                    politeness_markers=["Thank you", "Let us know"],
-                    boosters=["seamlessly"],
-                    modal_verbs=["can", "don't"],
-                    discourse_markers=["Please note", "while"],
-                    sentence_starters=["Thank you", "Karo integrates", "Let us know"],
-                    abbreviation_usage=["Karo"],
-                    mitigating_phrases=["just", "to avoid"],
-                ),
-            ],
-        ),
-    ),
-    (
-        """Message ID: example_4: Message:Hi team,
+Mustafa
+
+Message ID: example_4: Message:Hi team,
 
 Just wanted to follow up quickly on the API rate limit issue we observed yesterday. It seems like the backend might be throttling unexpectedly.
 
@@ -188,40 +183,68 @@ Also, kindly ensure the fallback queue gets triggered in such cases. I know thin
 FYI, I’ve rolled back to the last stable deployment as a precaution.
 
 Best,
-Riken""",
+Riken
+""",
         ExtractedStylometrySignals(
             extracted_stylometry_signals=[
                 StylometrySignalsFromMessage(
-                    message_id="example_4",
-                    tone=ToneEnum.ASSERTIVE,
-                    greeting_phrases=["Hi team"],
+                    message_id="",
+                    tone=ToneEnum.FRIENDLY,
+                    greeting_phrases=["Hi Jihad"],
                     politeness_markers=[
-                        "Just wanted to",
-                        "Could you please",
-                        "kindly",
-                        "no worries",
+                        "Thank you",
+                        "Please",
+                        "Let us know",
+                        "Best regards",
                     ],
-                    modal_verbs=["might", "could"],
-                    hedge_words=["seems like", "might"],
-                    boosters=[
-                        "definitely"
-                    ],  # If included: “definitely needed” (optional)
-                    mitigating_phrases=["just", "so", "as a precaution"],
-                    urgency_phrases=["quickly", "follow up"],
+                    modal_verbs=["can", "don’t", "ensures"],
+                    hedge_words=[],
+                    boosters=["so glad"],
+                    mitigating_phrases=["just", "to avoid"],
+                    urgency_phrases=[],
                     filler_words=["so"],
                     question_phrases=[
-                        "Could you please confirm",
-                        "Also, kindly ensure",
+                        "Let us know if you have any other questions or feedback"
                     ],
                     sentence_starters=[
-                        "Just wanted to",
-                        "FYI",
-                        "Also",
+                        "Hi Jihad",
+                        "Thank you for reaching out",
+                        "Please note",
+                        "Let us know",
+                        "Wishing you",
+                    ],
+                    passive_voice_patterns=[
+                        "are sent back",
+                        "tasks created in Karo don’t sync",
+                    ],
+                    abbreviation_usage=[],
+                    discourse_markers=["Please note"],
+                ),
+                StylometrySignalsFromMessage(
+                    message_id="",
+                    tone=ToneEnum.DIPLOMATIC,
+                    greeting_phrases=["Hi team"],
+                    politeness_markers=["Could you please", "kindly", "Best"],
+                    modal_verbs=["might", "could", "haven’t"],
+                    hedge_words=["seems like", "might", "if"],
+                    boosters=[],
+                    mitigating_phrases=["just", "no worries", "as a precaution"],
+                    urgency_phrases=[],
+                    filler_words=["just", "so"],
+                    question_phrases=[
+                        "Could you please confirm",
+                        "if there were any recent changes",
+                    ],
+                    sentence_starters=[
+                        "Hi team",
+                        "Just wanted to follow up",
                         "Could you please",
+                        "Also, kindly ensure",
+                        "FYI, I’ve rolled back",
                     ],
                     passive_voice_patterns=["gets triggered"],
                     abbreviation_usage=["API", "FYI"],
-                    discourse_markers=["Also", "so", "FYI"],
+                    discourse_markers=["Also", "FYI"],
                 ),
             ],
         ),

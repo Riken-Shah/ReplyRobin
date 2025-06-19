@@ -41,7 +41,7 @@ class Org(SQLModel, table=True):
     name: str
     max_thread_count: int = 10
     end_date: Optional[datetime] = None
-    preferred_emails: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    preferred_emails: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
     email: str = Field(primary_key=True, index=True)
     creds_file: str
     last_synced_at: Optional[datetime] = None
@@ -65,7 +65,7 @@ class Message(SQLModel, table=True):
     id: str = Field(primary_key=True)
     org_id: str = Field(foreign_key="org.email")
     thread_id: str = Field(foreign_key="thread.id")
-    label_ids: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    label_ids: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
     history_id: str
     internal_date: datetime = Field(sa_column=Column(TIMESTAMP(timezone=False)))
     size_estimate: int
@@ -75,14 +75,14 @@ class Message(SQLModel, table=True):
     subject: Optional[str] = None
     sender: Optional[str] = None
     reply_to: Optional[str] = None
-    recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))  # To field
-    cc_recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    bcc_recipients: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    recipients: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    cc_recipients: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    bcc_recipients: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
 
     # Additional useful email metadata
     message_id: Optional[str] = None  # Original Message-ID from email header
     references: List[str] = Field(
-        default=[], sa_column=Column(ARRAY(TEXT))
+        default=None, sa_column=Column(ARRAY(TEXT))
     )  # For threading
     in_reply_to: Optional[str] = None  # Message this is replying to
     importance: Optional[str] = None  # Priority/Importance of the email
@@ -93,25 +93,27 @@ class Message(SQLModel, table=True):
         None  # Stipped from welcome, closing and quoted text (Helps in getting the core content of the email)
     )
     intents: List[IntentEnum] = Field(
-        default=[], sa_column=Column(ARRAY(TEXT))
+        default=None, sa_column=Column(ARRAY(TEXT))
     )  # Multiple intents that describe the email purpose
 
     # Use specifically for character profiling
     tone: Optional[ToneEnum] = None
-    greeting_phrases: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    politeness_markers: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    modal_verbs: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    hedge_words: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    boosters: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    mitigating_phrases: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    urgency_phrases: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    filler_words: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    emoji_usage: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    question_phrases: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    sentence_starters: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    passive_voice_patterns: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    abbreviation_usage: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
-    discourse_markers: List[str] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    greeting_phrases: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    politeness_markers: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    modal_verbs: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    hedge_words: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    boosters: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    mitigating_phrases: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    urgency_phrases: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    filler_words: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    emoji_usage: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    question_phrases: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    sentence_starters: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    passive_voice_patterns: List[str] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    abbreviation_usage: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    discourse_markers: List[str] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
 
     # Punctuation Style
     ellipsis_frequency: Optional[float] = None
@@ -131,12 +133,12 @@ class ActionItem(SQLModel):
 
 
 class NamedEntities(SQLModel):
-    people: List[str] = []
-    organizations: List[str] = []
-    locations: List[str] = []
-    dates: List[str] = []
-    amounts: List[str] = []
-    misc: List[str] = []
+    people: List[str] = None
+    organizations: List[str] = None
+    locations: List[str] = None
+    dates: List[str] = None
+    amounts: List[str] = None
+    misc: List[str] = None
 
 
 class Participant(SQLModel):
@@ -153,13 +155,13 @@ class EmailThread(SQLModel):
     last_message_from_user: bool
     last_message_timestamp: datetime
     summary: str
-    intent: List[IntentEnum] = Field(default=[], sa_column=Column(ARRAY(TEXT)))
+    intent: List[IntentEnum] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
     status: Literal["awaiting_response", "resolved", "ongoing"]
     tone: Literal["formal", "casual", "urgent", "neutral"]
-    tags: List[str] = []
-    action_items: List[ActionItem] = []
+    tags: List[str] = None
+    action_items: List[ActionItem] = None
     named_entities: NamedEntities
-    participants: List[Participant] = []
+    participants: List[Participant] = None
     needs_dynamic_data: bool
     follow_up_required: bool
     urgency_score: float = Field(..., ge=0.0, le=1.0)

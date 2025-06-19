@@ -67,7 +67,7 @@ class Fetcher:
             thread_refs: list[dict] = []
             page_token: str | None = self.org.thread_page_token
             fetched = 0
-            last_page_token = None # Store not-null page token
+            last_page_token = None  # Store not-null page token
             while True:
                 page_refs, page_token = self._list_threads(query, page_token)
                 thread_refs.extend(page_refs)
@@ -146,14 +146,20 @@ class Fetcher:
             with self.db.session_scope() as session:
                 for i in range(0, len(thread_models), CHUNK_SIZE):
                     self.db.upsert_many(
-                        session, Thread, thread_models[i : i + CHUNK_SIZE]
+                        session,
+                        Thread,
+                        thread_models[i : i + CHUNK_SIZE],
+                        preserve_existing=True,
                     )
                 if thread_models:
                     print(f"Persisted {len(thread_models)} threads.")
 
                 for i in range(0, len(message_models), CHUNK_SIZE):
                     self.db.upsert_many(
-                        session, Message, message_models[i : i + CHUNK_SIZE]
+                        session,
+                        Message,
+                        message_models[i : i + CHUNK_SIZE],
+                        preserve_existing=True,
                     )
                 if message_models:
                     print(f"Persisted {len(message_models)} messages.")
@@ -161,7 +167,7 @@ class Fetcher:
                 self.org.last_synced_at = datetime.now(timezone.utc)
                 if last_page_token:
                     self.org.thread_page_token = last_page_token
-                session.add(self.org)
+                session.merge(self.org)
                 session.commit()
 
             return thread_models

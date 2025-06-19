@@ -77,9 +77,6 @@ class Processor:
 
         Strip quotes, starting and ending signatures.
         """
-
-        print("conetn: ", content)
-
         # We are currently using talon's bruteforce method to extract signature, to avoid extra overhead SVM computation.
         stripped_signature, _ = extract_signature(content)
 

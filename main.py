@@ -17,11 +17,11 @@ def create_or_update_org(session: Session, email: str, creds_file: str) -> Org:
         print(f"Creating new Org for {email}")
         org = Org(
             name="Test Org",
-            max_thread_count=10,
-            end_date=datetime(2024, 1, 1),  # Set a more recent date
+            max_thread_count=100,
+            end_date=datetime(2022, 1, 1),  # Set a more recent date
             email=email,
             creds_file=creds_file,
-            inital_fetch=True,
+            inital_fetch=False,
         )
     else:
         print(f"Found existing Org for {email}")
@@ -31,7 +31,8 @@ def create_or_update_org(session: Session, email: str, creds_file: str) -> Org:
     session.add(org)
     session.commit()
     session.refresh(org)
-    return org
+
+    return Org(**org.model_dump())
 
 
 if __name__ == "__main__":
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     # 1. Initialize DB (triggers auto-migration in dev mode)
     db = DB()
 
-    test_email = "rikenshah.02@gmail.com"
+    test_email = "support@karo.chat"
 
     print("Starting Gmail API Auth...")
     creds_file = get_user_credentials_file(test_email)
@@ -63,19 +64,19 @@ if __name__ == "__main__":
     print("\nFetch process complete.")
 
     # # 5. Initialize Processor with the DB instance and the Org object
-    # processor = Processor(db, org)
+    processor = Processor(db, org)
 
-    # new_messages = []
-    # # Get messages from the database
-    # with db.session_scope() as session:
-    #     result = session.exec(select(Message))
-    #     msgs = result.all()
+    new_messages = []
+    # Get messages from the database
+    with db.session_scope() as session:
+        result = session.exec(select(Message).where(Message.intents.is_(None)))
+        msgs = result.all()
 
-    #     for msg in msgs:
-    #         print(msg.model_dump())
-    #         new_messages.append(Message(**msg.model_dump()))
+        for msg in msgs:
+            new_messages.append(Message(**msg.model_dump()))
 
     # # 6. Run the process process
-    # print("\nStarting process process...")
-    # processor.process(new_messages)
-    # print("\nProcess process co mplete.")
+    print("\nStarting process process...")
+    processor.process(new_messages)
+    print("Found {} new messages to process".format(len(new_messages)))
+    print("\nProcess process complete.")

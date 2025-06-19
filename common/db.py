@@ -62,7 +62,11 @@ END$$;
         return self.engine
 
     def upsert_many(
-        self, session: Session, model_class: Type[SQLModel], data: List[SQLModel]
+        self,
+        session: Session,
+        model_class: Type[SQLModel],
+        data: List[SQLModel],
+        preserve_existing: bool = False,
     ):
         """
         Performs a bulk "upsert" (INSERT ON CONFLICT UPDATE) operation.
@@ -71,11 +75,23 @@ END$$;
             session: The SQLAlchemy session to use.
             model_class: The SQLModel class of the objects.
             data: A list of SQLModel instances to upsert.
+            preserve_existing: If True, only updates fields that are explicitly set (non-None)
+                              in the incoming data objects, preserving existing values for other fields.
         """
         if not data:
             return
 
-        dict_data = [d.model_dump() for d in data]
+        # Convert models to dictionaries, filtering out None values if preserve_existing is True
+        if preserve_existing:
+            # Only include non-None values to avoid overwriting existing data
+            dict_data = []
+            for d in data:
+                model_dict = d.model_dump(exclude_none=True)
+                dict_data.append(model_dict)
+        else:
+            # Include all fields, potentially overwriting with None values
+            dict_data = [d.model_dump() for d in data]
+
         stmt = insert(model_class).values(dict_data)
 
         # Detect primary key column names from SQLAlchemy Table metadata
@@ -84,7 +100,17 @@ END$$;
             raise ValueError(f"Model {model_class.__name__} has no primary key.")
 
         # Build dict of columns to update (exclude primary key cols)
-        update_cols = {c.name: c for c in stmt.excluded if c.name not in pk_cols}
+        # When preserve_existing is True, we only include columns present in all objects
+        if preserve_existing:
+            # Get the set of fields that are explicitly set in each data object
+            update_cols = {}
+            for item in dict_data:
+                for key, value in item.items():
+                    if key not in pk_cols and key in stmt.excluded:
+                        update_cols[key] = stmt.excluded[key]
+        else:
+            # Include all non-pk columns
+            update_cols = {c.name: c for c in stmt.excluded if c.name not in pk_cols}
 
         stmt = stmt.on_conflict_do_update(
             index_elements=pk_cols,

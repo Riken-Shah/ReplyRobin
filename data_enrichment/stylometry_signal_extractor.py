@@ -11,6 +11,7 @@ from typing import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 import uuid
 import re
+import time
 
 
 class Example(TypedDict):
@@ -74,7 +75,7 @@ class StyloMetrySignalExtractor:
         to extract, return null for the attribute's value.
 
         You can use following tone:
-        {TONE_ENUM}
+        {TONE_ENUM} 
         """.format(TONE_ENUM=[tone.value for tone in ToneEnum])
 
         self.__examples = STYLOMETRY_EXAMPLES
@@ -84,7 +85,7 @@ class StyloMetrySignalExtractor:
         # Initialize LLM
         if "gemini" in model:
             self.__llm = ChatGoogleGenerativeAI(model=model, api_key=api_key)
-            self.__batch_size = 2
+            self.__batch_size = 5
         else:
             pass
             # self.__llm = ChatOpenAI(model=model, api_key=api_key)
@@ -193,8 +194,13 @@ class StyloMetrySignalExtractor:
 
     def extract(self, msgs: List[Message]) -> List[Message]:
         """
-        Extract stylometry signals from the messages.
-        """
+        Extract stylometry signals from the messages."""
+
+        # Filter out messages that already have stylometry signals
+        msgs = [msg for msg in msgs if not msg.tone]
+        if len(msgs) == 0:
+            return msgs
+
         # Batch messages
         batched_msgs = [
             msgs[i : i + self.__batch_size]
@@ -209,11 +215,13 @@ class StyloMetrySignalExtractor:
         for batch in batched_msgs:
             # Build prompt with messages
             user_prompt = self.__build_prompt_with_messages(batch)
-            result: ExtractedStylometrySignals = self.__runnable.invoke(
-                {"text": user_prompt, "examples": self.__messages_history}
-            )
-
-            print(result)
+            try:
+                result: ExtractedStylometrySignals = self.__runnable.invoke(
+                    {"text": user_prompt, "examples": self.__messages_history}
+                )
+            except Exception as e:
+                print(f"Error extracting stylometry signals: {e}")
+                continue
 
             # Map extracted stylometry signals to messages by message ID
             if result.extracted_stylometry_signals:
@@ -223,6 +231,9 @@ class StyloMetrySignalExtractor:
                         for signal in result.extracted_stylometry_signals
                     }
                 )
+
+            # Add a delay to avoid rate limiting
+            time.sleep(1.5)
 
         for msg in msgs:
             if msg.id in stylometry_signals_map:
