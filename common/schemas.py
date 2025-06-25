@@ -124,6 +124,37 @@ class Message(SQLModel, table=True):
 
 # --- Non-table models for data processing ---
 
+class CharacterProfile(SQLModel):
+    sender: str
+    num_messages: int
+    avg_size_estimate: float
+    avg_cleaned_length: float
+    avg_ellipsis_frequency: Optional[float] = None
+    avg_exclamation_density: Optional[float] = None
+    uses_caps_for_emphasis: bool
+    uses_inline_parentheses: bool
+    avg_num_hedge_words: float
+    avg_num_modal_verbs: float
+    avg_num_boosters: float
+    avg_num_politeness_markers: float
+    avg_num_passive_patterns: float
+    avg_num_emoji: float
+    avg_num_question_phrases: float
+    top_greeting_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_politeness_markers: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_modal_verbs: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_hedge_words: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_boosters: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_mitigating_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_urgency_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_filler_words: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_emoji_usage: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_question_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_sentence_starters: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_passive_voice_patterns: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_abbreviation_usage: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_discourse_markers: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+
 
 class ActionItem(SQLModel):
     description: str
