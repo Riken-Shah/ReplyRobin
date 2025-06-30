@@ -8,7 +8,7 @@ from data_enrichment.processor import Processor
 from common.schemas import Org, Message
 from sqlmodel import select
 from local_auth.auth import get_user_credentials_file
-
+from ingestion_pipeline.semantic_effort.qwen import QwenEmbeddingProcess
 
 def create_or_update_org(session: Session, email: str, creds_file: str) -> Org:
     """Gets an existing Org or creates a new one."""
@@ -37,6 +37,7 @@ def create_or_update_org(session: Session, email: str, creds_file: str) -> Org:
 
 if __name__ == "__main__":
     load_dotenv()
+    embeeding_model = QwenEmbeddingProcess()
 
     # 1. Initialize DB (triggers auto-migration in dev mode)
     db = DB()
@@ -56,7 +57,7 @@ if __name__ == "__main__":
         raise Exception("Org not found")
 
     # 3. Initialize Fetcher with the DB instance and the Org object
-    fetcher = Fetcher(db, org)
+    fetcher = Fetcher(db, org, embedding_process=embeeding_model)
 
     # 4. Run the fetch process
     print("\nStarting fetch process...")

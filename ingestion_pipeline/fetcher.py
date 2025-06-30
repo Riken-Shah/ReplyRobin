@@ -14,6 +14,8 @@ from datetime import timezone
 # Local Modules
 from common.db import DB
 from common.schemas import Org, Thread, Message
+from .semantic_effort.vector_embeeding import VectorEmbeddingProcess
+import numpy as np
 
 SCOPES: List[str] = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -33,7 +35,7 @@ class Fetcher:
         Optional Gmail service – injected for easier unit-testing.
     """
 
-    def __init__(self, db: DB, org: Org, service: Resource | None = None):
+    def __init__(self, db: DB, org: Org, service: Resource | None = None, embedding_process: VectorEmbeddingProcess | None = None):
         self.db = db
         self.org = org
 
@@ -44,6 +46,8 @@ class Fetcher:
             self.service = build("gmail", "v1", credentials=creds)
 
         self.__inital_sync = self.org.thread_page_token is None
+        self.__embedding_process = embedding_process
+
 
     def initial_fetch(self) -> List[Thread]:
         """
@@ -106,6 +110,7 @@ class Fetcher:
                     for msg in messages:
                         # Extract all header information using the comprehensive function
                         header_info = self._extract_comprehensive_headers(msg)
+                        clean_body = self._parse_payload_to_text(msg["payload"])
 
                         message_obj = Message(
                             id=msg["id"],
@@ -118,7 +123,7 @@ class Fetcher:
                                 / 1000  # Convert ms to seconds
                             ),
                             size_estimate=msg.get("sizeEstimate", 0),
-                            body=self._parse_payload_to_text(msg["payload"]),
+                            body=clean_body,
                             # Email header fields
                             subject=header_info.get("subject"),
                             sender=header_info.get("sender"),
@@ -132,6 +137,7 @@ class Fetcher:
                             in_reply_to=header_info.get("in_reply_to"),
                             importance=header_info.get("importance"),
                             parent_message_id=previous_message_id,
+                            body_embedding=self.__embedding_process.embed(clean_body),
                         )
                         message_models.append(message_obj)
 
@@ -283,6 +289,9 @@ class Fetcher:
             return self._clean_email_body(soup.get_text(separator=" ", strip=True))
 
         return ""  # Nothing readable found
+
+    def _generate_embeddings(self, text: str) -> np.ndarray:
+        return self.__embedding_process.embed(text)
 
     # ------------------------------------------------------------------
     # Message cleanup helpers

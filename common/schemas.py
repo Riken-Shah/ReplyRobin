@@ -4,8 +4,7 @@ from sqlmodel import Field, SQLModel
 from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT, TIMESTAMP
-
-
+from pgvector.sqlalchemy import Vector
 class IntentEnum(str, Enum):
     """Enum for message intents"""
 
@@ -95,6 +94,7 @@ class Message(SQLModel, table=True):
     intents: List[IntentEnum] = Field(
         default=None, sa_column=Column(ARRAY(TEXT))
     )  # Multiple intents that describe the email purpose
+    body_embedding: list[float] = Field(sa_column=Column(Vector(1024)))
 
     # Use specifically for character profiling
     tone: Optional[ToneEnum] = None
