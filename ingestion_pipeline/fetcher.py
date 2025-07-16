@@ -10,6 +10,8 @@ from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from bs4 import BeautifulSoup
 from datetime import timezone
+import httplib2
+from google_auth_httplib2 import AuthorizedHttp
 
 # Local Modules
 from common.db import DB
@@ -43,7 +45,10 @@ class Fetcher:
             self.service = service
         else:
             creds = Credentials.from_authorized_user_file(self.org.creds_file, SCOPES)
-            self.service = build("gmail", "v1", credentials=creds)
+            # Create an authorized HTTP client for longer timeouts for large threads
+            http = httplib2.Http(timeout=120)  # Timeout in seconds
+            authed_http = AuthorizedHttp(creds, http=http)
+            self.service = build("gmail", "v1", http=authed_http)
 
         self.__inital_sync = self.org.thread_page_token is None
         self.__embedding_process = embedding_process
@@ -54,9 +59,9 @@ class Fetcher:
         This function is responsible for fetching all the inital emails from the org provided gmail.
         It fetches all the threads, messages and stores them in our postgres database. Once that's done next step of proccesing is begin.
         """
-        print("Fetching emails for org:", self.org.name)
+        print("Fetching emails for org:", self.org.email)
 
-        query_parts: List[str] = ["from:me"]
+        query_parts: List[str] = []
         if self.org.preferred_emails:
             senders_query = " ".join(self.org.preferred_emails)
             query_parts.append(f"from:{senders_query}")
@@ -137,7 +142,7 @@ class Fetcher:
                             in_reply_to=header_info.get("in_reply_to"),
                             importance=header_info.get("importance"),
                             parent_message_id=previous_message_id,
-                            body_embedding=self.__embedding_process.embed(clean_body),
+                            body_embedding=self.__embedding_process.embed(clean_body).tolist(),
                         )
                         message_models.append(message_obj)
 
@@ -189,6 +194,7 @@ class Fetcher:
     def _list_threads(
         self, query: str, page_token: str | None = None
     ) -> tuple[list[dict], str | None]:
+        print("Listing threads with query: {}".format(query))
         """List threads page with basic retry. Returns (threads, nextPageToken)."""
         for attempt in range(3):
             try:
@@ -197,7 +203,7 @@ class Fetcher:
                     .threads()
                     .list(
                         userId="me",
-                        maxResults=self.org.max_thread_count,
+                        maxResults=10,
                         q=query,
                         pageToken=page_token,
                     )

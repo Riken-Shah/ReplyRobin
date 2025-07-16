@@ -163,10 +163,12 @@ END$$;
                 embedding_vector = embedding_vector.tolist()
                 
             # Option 1: Using SQLModel's select and exec
+            search = select(Message.id, Message.body, Message.sender, Message.subject).order_by(Message.body_embedding.l2_distance(embedding_vector)).limit(match_count)
+
             if sender_email:
-                result = session.exec(select(Message.id, Message.body, Message.sender).where(Message.sender == sender_email).order_by(Message.body_embedding.l2_distance(embedding_vector)).limit(match_count))
-            else:
-                result = session.exec(select(Message.id, Message.body).order_by(Message.body_embedding.l2_distance(embedding_vector)).limit(match_count))
+                search = search.where(Message.sender == sender_email)
+
+            result = session.exec(search)
             
             # Simply return the results directly - they are already Message objects
             return result.all()

@@ -128,7 +128,7 @@ class CharacterProfile(SQLModel):
     sender: str
     num_messages: int
     avg_size_estimate: float
-    avg_cleaned_length: float
+    avg_cleaned_length: Optional[float] = None
     avg_ellipsis_frequency: Optional[float] = None
     avg_exclamation_density: Optional[float] = None
     uses_caps_for_emphasis: bool
