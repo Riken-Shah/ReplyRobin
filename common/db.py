@@ -139,36 +139,46 @@ END$$;
             raise
         finally:
             session.close()
-            
-    def vector_search(self, embedding_vector, match_threshold=0.7, match_count=5, sender_email: Optional[str] = None) -> List[Message]:
+
+    def vector_search(
+        self,
+        embedding_vector,
+        match_threshold=0.7,
+        match_count=5,
+        sender_email: Optional[str] = None,
+    ) -> List[Message]:
         """Performs a semantic search using vector embeddings.
-        
+
         Uses the match_documents SQL function to find semantically similar messages.
-        
+
         Args:
             embedding_vector: The query embedding vector to search against
             match_threshold: Similarity threshold (0.0 to 1.0), higher means more similar
             match_count: Maximum number of results to return
-            
+
         Returns:
             List of Message objects sorted by similarity (most similar first)
         """
         from sqlalchemy import text
         from common.schemas import Message
-        
+
         with self.session_scope() as session:
             # Convert embedding to a format compatible with Postgres vector type
-            if hasattr(embedding_vector, 'tolist'):
+            if hasattr(embedding_vector, "tolist"):
                 # Convert numpy arrays to list
                 embedding_vector = embedding_vector.tolist()
-                
+
             # Option 1: Using SQLModel's select and exec
-            search = select(Message.id, Message.body, Message.sender, Message.subject).order_by(Message.body_embedding.l2_distance(embedding_vector)).limit(match_count)
+            search = (
+                select(Message.id, Message.body, Message.sender, Message.subject)
+                .order_by(Message.body_embedding.l2_distance(embedding_vector))
+                .limit(match_count)
+            )
 
             if sender_email:
                 search = search.where(Message.sender == sender_email)
 
             result = session.exec(search)
-            
+
             # Simply return the results directly - they are already Message objects
             return result.all()

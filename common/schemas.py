@@ -124,6 +124,7 @@ class Message(SQLModel, table=True):
 
 # --- Non-table models for data processing ---
 
+
 class CharacterProfile(SQLModel):
     sender: str
     num_messages: int
@@ -140,20 +141,48 @@ class CharacterProfile(SQLModel):
     avg_num_passive_patterns: float
     avg_num_emoji: float
     avg_num_question_phrases: float
-    top_greeting_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_politeness_markers: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_modal_verbs: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_hedge_words: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_boosters: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_mitigating_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_urgency_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_filler_words: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_emoji_usage: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_question_phrases: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_sentence_starters: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_passive_voice_patterns: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_abbreviation_usage: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    top_discourse_markers: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    top_greeting_phrases: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_politeness_markers: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_modal_verbs: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_hedge_words: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_boosters: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_mitigating_phrases: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_urgency_phrases: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_filler_words: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_emoji_usage: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_question_phrases: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_sentence_starters: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_passive_voice_patterns: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_abbreviation_usage: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
+    top_discourse_markers: Optional[List[str]] = Field(
+        default=None, sa_column=Column(ARRAY(TEXT))
+    )
 
 
 class ActionItem(SQLModel):

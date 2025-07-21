@@ -10,9 +10,10 @@ from common.schemas import Org, Message, Thread
 from sqlmodel import select
 from local_auth.auth import get_user_credentials_file
 from ingestion_pipeline.semantic_effort.qwen import QwenEmbeddingProcess
-from reasoning_agent.agent import analyze_email_intent_simplified
-from character_agent.mimic import MimicAgent, run_email_generation
-from character_agent.understand_agent import get_strategy
+from character_agent.character_profile import fetch_character_profile
+from character_agent.master_agent.worker import Worker
+from character_agent.master_agent.state import Email
+
 
 def create_or_update_org(session: Session, email: str, creds_file: str) -> Org:
     """Gets an existing Org or creates a new one."""
@@ -49,12 +50,11 @@ if __name__ == "__main__":
     test_email = "support@karo.chat"
 
     # Step 0: Access to GMAIL
-    # Get the user's credentials file (stored as [email].json in our storage), this file is generated once 
+    # Get the user's credentials file (stored as [email].json in our storage), this file is generated once
     # user authorizes as access to there gmail account.
     creds_file = get_user_credentials_file(test_email)
 
-    
-    # Step 1: Upsert Org 
+    # Step 1: Upsert Org
     # Once we get the access to there gmail, we create an org object in our database.
     # It will overlook all other entites in the DB and give them org-scoped to there email.
     org = None
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     # Step 2: Fetch threads + messages
     # Our Fetcher class is responsible to do continuous fetching of threads + messages from the org's gmail account.
-    # We can run this as cron job every hour, there might be a case where it fetches & computes few threads 
+    # We can run this as cron job every hour, there might be a case where it fetches & computes few threads
     # again because we are using `nextPageToken` of `threads.list` API to fetch threads.
     fetcher = Fetcher(db, org, embedding_process=embeeding_model)
     fetcher.initial_fetch()
@@ -87,28 +87,54 @@ if __name__ == "__main__":
     processor.process(new_messages)
     print("Processed {} new messages".format(len(new_messages)))
 
-    # Find the messages in the recent thread where thread size == 1 and it's not the owner. 
+    # Find the messages in the recent thread where thread size == 1 and it's not the owner.
     # And only reply if you think it's worth replying to.
-
-    agent = MimicAgent(db, org)
-    profile = agent.fetch_character_profile("support@karo.chat")
+    profile = fetch_character_profile("support@karo.chat")
 
     with db.session_scope() as session:
-        result = session.exec(select(Message).where(Message.sender != org.email).where(Message.thread_id.in_(select(Thread.id).where(Thread.message_count == 1))))
+        result = session.exec(
+            select(Message)
+            .where(Message.sender != org.email)
+            .where(
+                Message.thread_id.in_(
+                    select(Thread.id).where(Thread.message_count == 1)
+                )
+            )
+        )
         msgs = result.all()
-        
+
+        worker = Worker()
+
         for root in msgs:
             subject = root.subject
             body = root.body
-            one = f"Subject: {subject} Body: {body}"
-            test_embedding = embeeding_model.embed(one)
-            past_messages = db.vector_search(test_embedding, sender_email="support@karo.chat", match_count=8)
-            past_messages = [f"Subject: {msg.subject} Body: {msg.body}" for msg in past_messages] 
-            strategy = get_strategy(one, past_messages)
-            result = run_email_generation(character_profile=profile, past_emails=past_messages, email_context=strategy.reason, required_intents=strategy.draft_intent)
-            print("Body: ", one)
-            print("Strategy: ", strategy.reason, strategy.draft_intent, strategy.confidence, strategy.useful_context_previous_emails)
-            print("Final Draft: ", result.get("final_draft"))
+            current_email = Email(
+                subject=root.subject, body=root.body, sender=root.sender
+            )
+            test_embedding = embeeding_model.embed(current_email.format())
+            past_messages = db.vector_search(
+                test_embedding, sender_email="support@karo.chat", match_count=8
+            )
+            past_messages = [
+                Email(subject=msg.subject, body=msg.body, sender=msg.sender)
+                for msg in past_messages
+            ]
+            print("Profile: ", profile)
+            result = worker.run_agent(
+                character_profile=profile,
+                current_email=current_email,
+                past_emails=past_messages,
+            )
+            # result = run_email_generation(
+            #     character_profile=profile, past_emails=past_messages, email_context=one
+            # )
+            print("Body: ", current_email.format())
+            print("Final Draft: ", result.final_draft)
 
-        
 
+# Points to rembebmer:
+# - we need to cite the context email and reasoing of selecting the stragey
+# - give all the information to the user, subject email name and intent
+# - are we presuming to take any action? how to do avoid writting if we are not sure
+# - create one multi-agent workflow
+# - think how are we managing memory - org informaton, lingustic changes, specfic style changes

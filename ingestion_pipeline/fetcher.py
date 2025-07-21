@@ -37,7 +37,13 @@ class Fetcher:
         Optional Gmail service – injected for easier unit-testing.
     """
 
-    def __init__(self, db: DB, org: Org, service: Resource | None = None, embedding_process: VectorEmbeddingProcess | None = None):
+    def __init__(
+        self,
+        db: DB,
+        org: Org,
+        service: Resource | None = None,
+        embedding_process: VectorEmbeddingProcess | None = None,
+    ):
         self.db = db
         self.org = org
 
@@ -52,7 +58,6 @@ class Fetcher:
 
         self.__inital_sync = self.org.thread_page_token is None
         self.__embedding_process = embedding_process
-
 
     def initial_fetch(self) -> List[Thread]:
         """
@@ -142,7 +147,9 @@ class Fetcher:
                             in_reply_to=header_info.get("in_reply_to"),
                             importance=header_info.get("importance"),
                             parent_message_id=previous_message_id,
-                            body_embedding=self.__embedding_process.embed(clean_body).tolist(),
+                            body_embedding=self.__embedding_process.embed(
+                                clean_body
+                            ).tolist(),
                         )
                         message_models.append(message_obj)
 

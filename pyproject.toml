@@ -28,6 +28,7 @@ dependencies = [
     "transformers>=4.51.0",
     "accelerate>=1.8.1",
     "pgvector>=0.4.1",
+    "langfuse>=3.2.1",
 ]
 
 [dependency-groups]
