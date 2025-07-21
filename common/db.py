@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
 from contextlib import contextmanager
 from sqlalchemy import select
+
 # This line is crucial for SQLModel to discover the table models.
 from common.schemas import *
 

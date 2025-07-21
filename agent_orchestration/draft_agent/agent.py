@@ -5,9 +5,9 @@ from langgraph.pregel.call import P
 from langgraph.types import Command
 from langchain_google_genai import ChatGoogleGenerativeAI
 from common.schemas import CharacterProfile
-from character_agent.draft_agent.system_prompt import make_prompt
-from character_agent.draft_agent.respone_schema import DraftAgentResponse
-from character_agent.master_agent.state import MultiAgentState
+from agent_orchestration.draft_agent.system_prompt import make_prompt
+from agent_orchestration.draft_agent.respone_schema import DraftAgentResponse
+from agent_orchestration.master_agent.state import MultiAgentState
 
 
 def create_agent(

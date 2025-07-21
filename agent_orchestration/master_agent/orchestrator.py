@@ -1,14 +1,15 @@
 from langgraph.graph import StateGraph, END
 from typing import Literal
 import logging
-from character_agent.master_agent.state import (
+from agent_orchestration.master_agent.state import (
     MAX_ITERATIONS,
     APPROVAL_THRESHOLD,
     MultiAgentState,
 )
-from character_agent.draft_agent.agent import drafter_node
-from character_agent.judge_agent.agent import judge_node
-from character_agent.planner_agent.agent import planner_node
+from agent_orchestration.draft_agent.agent import drafter_node
+from agent_orchestration.judge_agent.agent import judge_node
+from agent_orchestration.planner_agent.agent import planner_node
+from langsmith import traceable
 
 
 def should_continue_with_drafter_judge_loop(
@@ -41,6 +42,7 @@ def should_continue_with_drafter_or_exit(
     return "drafter"
 
 
+@traceable
 def email_drafter_agent_workflow():
     """Create the enhanced workflow graph"""
     workflow = StateGraph(MultiAgentState)

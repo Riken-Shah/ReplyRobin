@@ -5,6 +5,8 @@ from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT, TIMESTAMP
 from pgvector.sqlalchemy import Vector
+
+
 class IntentEnum(str, Enum):
     """Enum for message intents"""
 

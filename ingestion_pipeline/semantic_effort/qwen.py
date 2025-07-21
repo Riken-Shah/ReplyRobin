@@ -2,6 +2,7 @@ from sentence_transformers import SentenceTransformer
 from .vector_embeeding import VectorEmbeddingProcess
 import numpy as np
 
+
 class QwenEmbeddingProcess(VectorEmbeddingProcess):
     def load_model(self):
         self.__model = SentenceTransformer("Qwen/Qwen3-Embedding-0.6B")

@@ -3,9 +3,10 @@ from sqlalchemy import text
 from common.schemas import CharacterProfile
 from common.db import DB
 
+
 def fetch_character_profile(db: DB, sender: str) -> Optional[CharacterProfile]:
-        """Fetches the character profile for a given sender from the database."""
-        sql_query = """ 
+    """Fetches the character profile for a given sender from the database."""
+    sql_query = """ 
  WITH base_stats AS (
   SELECT
       sender,
@@ -230,15 +231,13 @@ LEFT JOIN top_passive_voice_patterns t_pas ON b.sender = t_pas.sender
 LEFT JOIN top_abbreviation_usage t_abb ON b.sender = t_abb.sender
 LEFT JOIN top_discourse_markers t_dis ON b.sender = t_dis.sender;
         """
-        with db.session_scope() as session:
-            result = (
-                session.exec(text(sql_query), {"sender": sender})
-                .mappings()
-                .one_or_none()
-            )
+    with db.session_scope() as session:
+        result = (
+            session.execute(text(sql_query), {"sender": sender})
+            .mappings()
+            .one_or_none()
+        )
 
-        if result:
-            return CharacterProfile.model_validate(result)
-        return None
-      
-     
+    if result:
+        return CharacterProfile.model_validate(result)
+    return None

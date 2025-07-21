@@ -1,7 +1,7 @@
-from character_agent.master_agent.orchestrator import email_drafter_agent_workflow
+from agent_orchestration.master_agent.orchestrator import email_drafter_agent_workflow
 from typing import List, Optional
 from common.schemas import CharacterProfile
-from character_agent.master_agent.state import MultiAgentState, Email
+from agent_orchestration.master_agent.state import MultiAgentState, Email
 from pydantic import BaseModel
 
 

@@ -1,5 +1,5 @@
 from typing import List
-from character_agent.master_agent.state import Email
+from agent_orchestration.master_agent.state import Email
 
 
 # TODO: We can inject custom org-specfic instruction to this planner prompt.

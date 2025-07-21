@@ -5,10 +5,10 @@ from typing import Literal, List, Dict
 from langgraph.pregel.call import P
 from langgraph.types import Command
 from langchain_google_genai import ChatGoogleGenerativeAI
-from character_agent.judge_agent.system_prompt import make_prompt
-from character_agent.master_agent.state import MultiAgentState, MAX_ITERATIONS
-from character_agent.judge_agent.respone_schema import JudgeAgentResponse, Scores
-from character_agent.master_agent.state import Email
+from agent_orchestration.judge_agent.system_prompt import make_prompt
+from agent_orchestration.master_agent.state import MultiAgentState, MAX_ITERATIONS
+from agent_orchestration.judge_agent.respone_schema import JudgeAgentResponse, Scores
+from agent_orchestration.master_agent.state import Email
 
 
 def create_agent(
