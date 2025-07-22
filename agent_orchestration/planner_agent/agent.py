@@ -42,21 +42,24 @@ def planner_node(state: MultiAgentState) -> Command[Literal["drafter"]]:
     pprint("This is the last message: ")
 
     # If we cannot figure the suitable plan it is better to drop-out from here.
-    if (
-        planner_response.strategy_selected is not None
-        and len(planner_response.useful_context_previous_emails) == 0
-    ):
-        print(
-            "We cannot figure out correct stargey to move forward or because of lack of context."
-        )
+    selected_plan_cited_emails = (
+        planner_response.possible_strategies[
+            planner_response.strategy_selected
+        ].citation_of_previous_email
+        if planner_response.strategy_selected
+        else []
+    )
+    if not len(selected_plan_cited_emails):
+        print("We cannot find any citation for slected plan, hence skipping this")
+        planner_response.strategy_selected = None
 
     past_emails = state.get("past_emails")
-    print([i for i, _ in enumerate(planner_response.useful_context_previous_emails)])
+    print([i for i, _ in enumerate(selected_plan_cited_emails)])
     return {
         # Sometimes AI fucks up and adds non-existent indexes to this, so right now we are avoiding "Out of Index" error
         "reference_emails": [
             past_emails[i] if i < len(past_emails) else ""
-            for i in planner_response.useful_context_previous_emails
+            for i in selected_plan_cited_emails
         ],
         "draft_plan_selected": planner_response.strategy_selected,
         "draft_plan_confidence": planner_response.confidence,

@@ -37,4 +37,4 @@ class MultiAgentState(MessagesState):
 
 # Maximum allowed iteration between drafter-judge agent
 MAX_ITERATIONS = 3
-APPROVAL_THRESHOLD = 8.0
+APPROVAL_THRESHOLD = 7.0

@@ -25,8 +25,7 @@ def make_prompt(
 
 EVALUATION CRITERIA - Score each section 0-10:
 
-1. STRUCTURE & LENGTH (Weight: 15%)
-   - Target length: {character_profile.avg_cleaned_length} words
+1. STRUCTURE (Weight: 15%)
    - Appropriate paragraph structure
    - Overall email organization
 
@@ -63,7 +62,7 @@ SCORING INSTRUCTIONS:
 
 FORMAT YOUR RESPONSE EXACTLY AS:
 SCORE BREAKDOWN:
-- Structure & Length: X/10 (reason)
+- Structure: X/10 (reason)
 - Linguistic Patterns: X/10 (reason)  
 - Stylistic Elements: X/10 (reason)
 - Authenticity: X/10 (reason)

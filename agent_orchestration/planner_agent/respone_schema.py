@@ -2,14 +2,28 @@ from typing import List, Optional
 from pydantic import Field, BaseModel
 
 
+class StragyWithCitation(BaseModel):
+    stragy: str = Field(
+        description="One liner stragey for the curret email based on previous emails if you can't find citation refrain from listing down stragey"
+    )
+    citation_of_previous_email: List[int] = Field(
+        default_factory=list,
+        description="Indexes of previous email which led to this stragy",
+    )
+
+
 # Planner Agent Response
 class PlannerAgentResponse(BaseModel):
     "Precise and descriptive response of our planner agent"
 
     # We might extend this later to be more descriptive and more detailed
-    possible_strategies: List[str] = Field(
+    # possible_strategies: List[str] = Field(
+    #     default_factory=list,
+    #     description="List down all possible straegies based on previous email context",
+    # )
+    possible_strategies: List[StragyWithCitation] = Field(
         default_factory=list,
-        description="List down all possible straegies based on previous email context",
+        description="List down all possible straegies based on previous email context with correct citations",
     )
     # Our agent makes the descion of selecting the best plan, assesing current email and previous email context
     strategy_selected: Optional[int] = Field(
@@ -25,7 +39,7 @@ class PlannerAgentResponse(BaseModel):
         "",
         description="One liner reasoning why the selected plan is best, if yes, why yes? and no, why no?",
     )
-    useful_context_previous_emails: List[int] = Field(
-        default_factory=list,
-        description="Indices of past email we used to come to descion of selected strategy_selected",
-    )
+    # useful_context_previous_emails: List[int] = Field(
+    #     default_factory=list,
+    #     description="Indices of past email we used to come to descion of selected strategy_selected",
+    # )

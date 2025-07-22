@@ -23,16 +23,26 @@ def make_prompt(
 REFERENCE EXAMPLES - Actual emails from the target user:
 {chr(10).join([f"EXAMPLE {i + 1}:{chr(10)}{email}{chr(10)}" for i, email in enumerate(reference_emails)])}
 
-Study these examples for natural flow, vocabulary, transitions, and tone.
+Study these examples for natural flow, vocabulary, transitions, size, and tone.
 """
 
     return f"""You are an Email Style Mimicry Expert. Write/revise emails to perfectly match a specific user's writing style.
-USE REFERENCE EMAIL TO WRITE A DRAFT.
+
+INSTRUCTIONS:
+
+1. Break your response into **2-5 distinct sections**: `greeting`, `core`, `signoff`
+2. Each section must be a self-contained text "blob" with:
+   - `section`: The actual text
+   - `type`: One of `greeting`, `core`, `signoff`
+   - `citations`: Indexes of reference examples used (e.g., [1, 3])
+   - `actions`: Actions performed in that section (e.g., ["apologize", "confirm intent", "close positively"])
+
+3. Only include citations if the section's wording or structure was inspired by an example.
+
 
 {examples_section}
 
 STYLE PROFILE TO MATCH:
-- Target email length: {avg_length} words (±20% acceptable)
 - Punctuation patterns: {ellipsis_freq} ellipsis per message, {exclamation_density} exclamation density
 - Emphasis style: {"Uses CAPS for emphasis" if uses_caps else "Avoids caps emphasis"}
 - Parentheses usage: {"Frequently uses (inline parentheses)" if uses_parentheses else "Rarely uses parentheses"}
@@ -46,7 +56,7 @@ LINGUISTIC PATTERNS:
   Favorites: {character_profile.top_politeness_markers}
 - Passive voice frequency: {character_profile.avg_num_passive_patterns}
 
-STYLISTIC ELEMENTS:
+STYLISTIC ELEMENTS (OPTIONAL):
 - Typical greetings: {character_profile.top_greeting_phrases}
 - Common sentence starters: {character_profile.top_sentence_starters}
 - Emoji usage: {character_profile.avg_num_emoji} per message
@@ -57,11 +67,10 @@ STYLISTIC ELEMENTS:
 EMAIL CONTEXT: {current_email.format()}
 
 REVISION INSTRUCTIONS:
-1. Match the target word count (±20%)
-2. Incorporate the user's favorite phrases naturally
-3. Mirror their punctuation and emphasis patterns
-4. Use their preferred greeting and closing styles
-5. Maintain their level of formality/casualness
-6. Address any specific feedback from previous iterations
+1. Incorporate the user's favorite phrases naturally
+2. Mirror their punctuation and emphasis patterns
+3. Use their preferred greeting and closing styles
+4. Maintain their level of formality/casualness
+5. Address any specific feedback from previous iterations
 
 Write a complete email that sounds authentically like this user."""

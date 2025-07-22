@@ -58,8 +58,7 @@ def drafter_node(state: MultiAgentState) -> Command[Literal["judge"]]:
     result = drafter_agent.invoke(enhanced_state)
 
     # Extract the draft from the response
-    draft_content: DraftAgentResponse = result["structured_response"].draft
-    print("Draft Agent: ", draft_content)
+    draft_content: DraftAgentResponse = result["structured_response"]
 
     # Update state and return
     updated_state = {
@@ -69,6 +68,8 @@ def drafter_node(state: MultiAgentState) -> Command[Literal["judge"]]:
     }
 
     # Ensure proper message format
-    result["messages"][-1] = HumanMessage(content=draft_content, name="drafter")
+    result["messages"][-1] = HumanMessage(
+        content=draft_content.get_draft(), name="drafter"
+    )
 
     return Command(update=updated_state, goto="judge")
