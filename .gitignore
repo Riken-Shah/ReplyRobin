@@ -10,7 +10,7 @@ wheels/
 .venv
 
 # Google Client Secret
-client_secret_reply_robin.json
+client_secret.json
 
 # Client tokens
 tokens/*
