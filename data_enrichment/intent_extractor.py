@@ -1,14 +1,15 @@
-from common.schemas import IntentEnum
+# from db.schemas import IntentEnum
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import List
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .intent_examples import INTENT_EXAMPLES, ExtractedIntents
-from common.schemas import Message
+from db.schemas import Message
 from typing import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 import uuid
 import time
+from reasoning_agent.agent import IntentEnum
 
 
 class Example(TypedDict):
@@ -82,7 +83,7 @@ class IntentExtractor:
         # Initialize LLM
         if "gemini" in model:
             self.__llm = ChatGoogleGenerativeAI(model=model, api_key=api_key)
-            self.__batch_size = 10
+            self.__batch_size = 20
         else:
             pass
             # self.__llm = ChatOpenAI(model=model, api_key=api_key)
@@ -118,7 +119,7 @@ class IntentExtractor:
             )
 
         example_emails = [
-            Message(id="example_1", body=text) for text, _ in self.__examples
+            Message(id="example_1", raw_content=text) for text, _ in self.__examples
         ]
         example_prompt = self.__build_prompt_with_messages(example_emails)
 
@@ -136,7 +137,7 @@ class IntentExtractor:
         """
         prompt = ""
         for msg in msgs:
-            prompt += f"Message ID: {msg.id}: Message:{msg.body}\n"
+            prompt += f"Message ID: {msg.id}: Message:{msg.raw_content}\n"
 
         return prompt
 
@@ -145,7 +146,7 @@ class IntentExtractor:
         Extract intents from the messages.
         """
         # Filter out messages that already have intents
-        msgs = [msg for msg in msgs if not msg.intents]
+        msgs = [msg for msg in msgs if not msg.has_signal("intent")]
         if len(msgs) == 0:
             return msgs
 
@@ -181,11 +182,13 @@ class IntentExtractor:
 
         for msg in msgs:
             if msg.id in intent_map:
-                msg.intents = intent_map[msg.id]
+                msg.set_signal("intents", intent_map[msg.id])
             else:
                 # If no intents were extracted for this message, set default intent
                 print(f"No intents extracted for message ID: {msg.id}")
-                msg.intents = [IntentEnum.GENERAL_QUESTION]
+                # This is a fallback, you can choose to skip this message or handle it differently
+                # msg.set_signal("intent", [IntentEnum.GENERAL_QUESTION])
+                msg.set_signal("intents", [IntentEnum.GENERAL_QUESTION])
 
         return msgs
 
@@ -194,13 +197,13 @@ if __name__ == "__main__":
     msgs = [
         Message(
             id="23",
-            body="Hey team, I am facing an issue with the app. Can you please help me?",
+            raw_content="Hey team, I am facing an issue with the app. Can you please help me?",
         ),
         Message(
             id="24",
-            body="I've already paid for the app, but I'm not able to login. Can you please help me?",
+            raw_content="I've already paid for the app, but I'm not able to login. Can you please help me?",
         ),
-        Message(id="26", body="Do you want to but our produce?"),
+        Message(id="26", raw_content="Do you want to but our produce?"),
     ]
     intent_extractor = IntentExtractor()
     intent_extractor.extract(msgs)

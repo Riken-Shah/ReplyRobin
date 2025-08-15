@@ -1,12 +1,13 @@
 from turtle import st
-from common.schemas import IntentEnum
+
+# from db.schemas import IntentEnum
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import List
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .stylometry_signal_examples import STYLOMETRY_EXAMPLES, ExtractedStylometrySignals
-from common.schemas import Message
-from common.schemas import ToneEnum
+from db.schemas import Message
+from db.schemas import ToneEnum
 from typing import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 import uuid
@@ -121,7 +122,7 @@ class StyloMetrySignalExtractor:
             )
 
         example_emails = [
-            Message(id="example_1", body=text) for text, _ in self.__examples
+            Message(id="example_1", raw_content=text) for text, _ in self.__examples
         ]
         example_prompt = self.__build_prompt_with_messages(example_emails)
 
@@ -139,7 +140,7 @@ class StyloMetrySignalExtractor:
         """
         prompt = ""
         for msg in msgs:
-            prompt += f"Message ID: {msg.id}: Message:{msg.body}\n"
+            prompt += f"Message ID: {msg.id}: Message:{msg.raw_content}\n"
 
         return prompt
 
@@ -197,7 +198,10 @@ class StyloMetrySignalExtractor:
         Extract stylometry signals from the messages."""
 
         # Filter out messages that already have stylometry signals
-        msgs = [msg for msg in msgs if not msg.tone]
+        print("Extracting stylometry signals for all messages...", len(msgs))
+        for msg in msgs:
+            print(f"Processing message ID: {msg.id}", msg.get_signal("tone"))
+        msgs = [msg for msg in msgs if not msg.has_signal("tone")]
         if len(msgs) == 0:
             return msgs
 
@@ -225,6 +229,11 @@ class StyloMetrySignalExtractor:
 
             # Map extracted stylometry signals to messages by message ID
             if result.extracted_stylometry_signals:
+                print(
+                    "Extracted stylometry signals for {} messages".format(
+                        len(result.extracted_stylometry_signals)
+                    )
+                )
                 stylometry_signals_map.update(
                     {
                         signal.message_id: signal
@@ -237,29 +246,51 @@ class StyloMetrySignalExtractor:
 
         for msg in msgs:
             if msg.id in stylometry_signals_map:
-                msg.tone = stylometry_signals_map[msg.id].tone
-                msg.greeting_phrases = stylometry_signals_map[msg.id].greeting_phrases
-                msg.politeness_markers = stylometry_signals_map[
-                    msg.id
-                ].politeness_markers
-                msg.modal_verbs = stylometry_signals_map[msg.id].modal_verbs
-                msg.hedge_words = stylometry_signals_map[msg.id].hedge_words
-                msg.boosters = stylometry_signals_map[msg.id].boosters
-                msg.mitigating_phrases = stylometry_signals_map[
-                    msg.id
-                ].mitigating_phrases
-                msg.urgency_phrases = stylometry_signals_map[msg.id].urgency_phrases
-                msg.filler_words = stylometry_signals_map[msg.id].filler_words
-                msg.question_phrases = stylometry_signals_map[msg.id].question_phrases
-                msg.sentence_starters = stylometry_signals_map[msg.id].sentence_starters
-                msg.passive_voice_patterns = stylometry_signals_map[
-                    msg.id
-                ].passive_voice_patterns
-                msg.abbreviation_usage = stylometry_signals_map[
-                    msg.id
-                ].abbreviation_usage
-                msg.discourse_markers = stylometry_signals_map[msg.id].discourse_markers
-                msg.emoji_usage = self.__extract_emojis(msg.body)
+                msg.set_signal("tone", stylometry_signals_map[msg.id].tone)
+                msg.set_signal(
+                    "greeting_phrases", stylometry_signals_map[msg.id].greeting_phrases
+                )
+                msg.set_signal(
+                    "politeness_markers",
+                    stylometry_signals_map[msg.id].politeness_markers,
+                )
+                msg.set_signal(
+                    "modal_verbs", stylometry_signals_map[msg.id].modal_verbs
+                )
+                msg.set_signal(
+                    "hedge_words", stylometry_signals_map[msg.id].hedge_words
+                )
+                msg.set_signal("boosters", stylometry_signals_map[msg.id].boosters)
+                msg.set_signal(
+                    "mitigating_phrases",
+                    stylometry_signals_map[msg.id].mitigating_phrases,
+                )
+                msg.set_signal(
+                    "urgency_phrases", stylometry_signals_map[msg.id].urgency_phrases
+                )
+                msg.set_signal(
+                    "filler_words", stylometry_signals_map[msg.id].filler_words
+                )
+                msg.set_signal(
+                    "question_phrases", stylometry_signals_map[msg.id].question_phrases
+                )
+                msg.set_signal(
+                    "sentence_starters",
+                    stylometry_signals_map[msg.id].sentence_starters,
+                )
+                msg.set_signal(
+                    "passive_voice_patterns",
+                    stylometry_signals_map[msg.id].passive_voice_patterns,
+                )
+                msg.set_signal(
+                    "abbreviation_usage",
+                    stylometry_signals_map[msg.id].abbreviation_usage,
+                )
+                msg.set_signal(
+                    "discourse_markers",
+                    stylometry_signals_map[msg.id].discourse_markers,
+                )
+                msg.set_signal("emoji_usage", self.__extract_emojis(msg.raw_content))
             else:
                 # If no stylometry signals were extracted for this message, log
                 print(f"No stylometry signals extracted for message ID: {msg.id}")

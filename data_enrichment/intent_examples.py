@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 from typing import List
-from common.schemas import IntentEnum
+
+# from db.schemas import IntentEnum
 from typing import Optional
+from enum import Enum
+from reasoning_agent.agent import IntentEnum
 from pydantic import Field
 
 

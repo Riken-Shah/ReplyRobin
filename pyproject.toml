@@ -32,6 +32,7 @@ dependencies = [
     "openevals>=0.1.0",
     "openai>=1.88.0",
     "schedule>=1.2.2",
+    "sqlalchemy-migrate>=0.13.0",
 ]
 
 [dependency-groups]

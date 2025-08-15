@@ -1,5 +1,4 @@
-from common.db import DB
-from common.schemas import Org, Message
+from db.schemas import Org, Message
 import talon
 from talon import quotations
 from talon.signature.bruteforce import extract_signature
@@ -10,14 +9,13 @@ from os import getenv
 
 
 class Processor:
-    def __init__(self, db: DB, org: Org):
+    def __init__(self, org: Org):
         # Initialize talon
         talon.init()
 
-        self.db = db
         self.org = org
 
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = "gemini-2.5-flash"
         self.__gemini_api_key = getenv("GEMNI_API_KEY")
         self.intent_extractor = IntentExtractor(
             model=self.model_name, api_key=self.__gemini_api_key
@@ -27,7 +25,7 @@ class Processor:
             model=self.model_name, api_key=self.__gemini_api_key
         )
 
-    def process(self, msgs: List[Message]):
+    def process(self, msgs: List[Message]) -> List[Message]:
         """
         For all the message we will extract,
         `cleaned_content` - message stripped of quotes, starting and ending signatures
@@ -51,8 +49,9 @@ class Processor:
 
         # Extract clean content
         for msg in msgs:
-            msg.cleaned_content = self.__extract_clean_content(msg.body)
+            msg.raw_content = self.__extract_clean_content(msg.raw_content)
 
+        print("Extracting intetns for all messages...", len(msgs))
         # Extract intents
         self.intent_extractor.extract(msgs)
 
@@ -63,13 +62,15 @@ class Processor:
             else:
                 customer_messages.append(msg)
 
+        print("Extracting stylometry signals for user messages...", len(user_messages))
         # Extract stylometry signals
-        self.stylometry_signal_extractor.extract(user_messages)
+        msgs = self.stylometry_signal_extractor.extract(user_messages)
 
         # Upsert all messages to the database after processing
-        with self.db.session_scope() as session:
-            self.db.upsert_many(session, Message, msgs)
-            print(f"Upserted {len(msgs)} messages to the database")
+        # with self.db.session_scope() as session:
+        #     self.db.upsert_many(session, Message, msgs)
+        #     print(f"Upserted {len(msgs)} messages to the database")
+        return msgs
 
     def __extract_clean_content(self, content: str) -> str:
         """

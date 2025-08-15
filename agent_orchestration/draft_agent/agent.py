@@ -4,7 +4,7 @@ from typing import Literal, List
 from langgraph.pregel.call import P
 from langgraph.types import Command
 from langchain_google_genai import ChatGoogleGenerativeAI
-from common.schemas import CharacterProfile
+from db.schemas import CharacterProfile
 from agent_orchestration.draft_agent.system_prompt import make_prompt
 from agent_orchestration.draft_agent.respone_schema import DraftAgentResponse
 from agent_orchestration.master_agent.state import MultiAgentState

@@ -428,6 +428,15 @@ wheels = [
 ]
 
 [[package]]
+name = "decorator"
+version = "5.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/fa/6d96a0978d19e17b68d634497769987b16c8f4cd0a7a05048bec693caa6b/decorator-5.2.1.tar.gz", hash = "sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360", size = 56711, upload-time = "2025-02-24T04:41:34.073Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/8c/f3147f5c4b73e7550fe5f9352eaa956ae838d5c51eb58e7a25b9f3e2643b/decorator-5.2.1-py3-none-any.whl", hash = "sha256:d316bb415a2d9e2d2b3abcc4084c6502fc09240e292cd76a76afc106a1c8e04a", size = 9190, upload-time = "2025-02-24T04:41:32.565Z" },
+]
+
+[[package]]
 name = "deprecated"
 version = "1.2.18"
 source = { registry = "https://pypi.org/simple" }
@@ -2419,6 +2428,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pbr"
+version = "6.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/01/d2/510cc0d218e753ba62a1bc1434651db3cd797a9716a0a66cc714cb4f0935/pbr-6.1.1.tar.gz", hash = "sha256:93ea72ce6989eb2eed99d0f75721474f69ad88128afdef5ac377eb797c4bf76b", size = 125702, upload-time = "2025-02-04T14:28:06.514Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/47/ac/684d71315abc7b1214d59304e23a982472967f6bf4bde5a98f1503f648dc/pbr-6.1.1-py2.py3-none-any.whl", hash = "sha256:38d4daea5d9fa63b3f626131b9d34947fd0c8be9b05a29276870580050a25a76", size = 108997, upload-time = "2025-02-04T14:28:03.168Z" },
+]
+
+[[package]]
 name = "pgvector"
 version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -3109,6 +3130,7 @@ dependencies = [
     { name = "schedule" },
     { name = "sentence-transformers" },
     { name = "sqlalchemy" },
+    { name = "sqlalchemy-migrate" },
     { name = "sqlmodel" },
     { name = "supabase" },
     { name = "talon" },
@@ -3145,6 +3167,7 @@ requires-dist = [
     { name = "schedule", specifier = ">=1.2.2" },
     { name = "sentence-transformers", specifier = ">=2.7.0" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
+    { name = "sqlalchemy-migrate", specifier = ">=0.13.0" },
     { name = "sqlmodel", specifier = ">=0.0.19" },
     { name = "supabase", specifier = ">=2.15.3" },
     { name = "talon", specifier = ">=1.4.4" },
@@ -3478,6 +3501,23 @@ asyncio = [
 ]
 
 [[package]]
+name = "sqlalchemy-migrate"
+version = "0.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "decorator" },
+    { name = "pbr" },
+    { name = "six" },
+    { name = "sqlalchemy" },
+    { name = "sqlparse" },
+    { name = "tempita" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/36/bb/40f66b12b18fb03da76dcee31df75cca9e54b71d9d8a784bb95bfbadee2c/sqlalchemy-migrate-0.13.0.tar.gz", hash = "sha256:0bc02e292a040ade5e35a01d3ea744119e1309cdddb704fdb99bac13236614f8", size = 131424, upload-time = "2019-10-22T21:16:22.382Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/ba/0725bf5f54d0c5ed7c1da025215f288fb68ef4cc4966abfb76c1926ee0af/sqlalchemy_migrate-0.13.0-py2.py3-none-any.whl", hash = "sha256:e5d2348db19a5062132d93e3b4d9e7644af552fffbec4c78cc5358f848d2f6c1", size = 109099, upload-time = "2019-10-22T21:16:17.963Z" },
+]
+
+[[package]]
 name = "sqlmodel"
 version = "0.0.24"
 source = { registry = "https://pypi.org/simple" }
@@ -3488,6 +3528,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/86/4b/c2ad0496f5bdc6073d9b4cef52be9c04f2b37a5773441cc6600b1857648b/sqlmodel-0.0.24.tar.gz", hash = "sha256:cc5c7613c1a5533c9c7867e1aab2fd489a76c9e8a061984da11b4e613c182423", size = 116780, upload-time = "2025-03-07T05:43:32.887Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/16/91/484cd2d05569892b7fef7f5ceab3bc89fb0f8a8c0cde1030d383dbc5449c/sqlmodel-0.0.24-py3-none-any.whl", hash = "sha256:6778852f09370908985b667d6a3ab92910d0d5ec88adcaf23dbc242715ff7193", size = 28622, upload-time = "2025-03-07T05:43:30.37Z" },
+]
+
+[[package]]
+name = "sqlparse"
+version = "0.5.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999, upload-time = "2024-12-10T12:05:30.728Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415, upload-time = "2024-12-10T12:05:27.824Z" },
 ]
 
 [[package]]
@@ -3581,6 +3630,15 @@ dependencies = [
     { name = "six" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/eb/f7/3348324b489f74500054a1a1ea18b86cc40d19994f789311228c12a6bcc7/talon-1.4.4.tar.gz", hash = "sha256:263d122609747691e9f75726ea565f5da8a40146a7a81eb5883e51b8224b0e5c", size = 62294, upload-time = "2017-08-24T23:04:14.082Z" }
+
+[[package]]
+name = "tempita"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/d5/ad8a832e120cb9b743f175b80368b457a1078cd65bd9b8578aca5ddb1bd2/tempita-0.6.0.tar.gz", hash = "sha256:76e15de0137e5011c22949cc15a5161f623fe6a31655751c6d765db6bbac27b6", size = 19205, upload-time = "2024-11-12T21:55:45.424Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/05/346f980c4e643f04ec3630c20d8169ffbea5137f6dcf7619d7349f7f9401/Tempita-0.6.0-py3-none-any.whl", hash = "sha256:696160ba5302b344934558d9d4c94a7b9778b7641612f4e20d62fcac4d7a02c9", size = 13752, upload-time = "2024-11-12T21:55:43.827Z" },
+]
 
 [[package]]
 name = "tenacity"

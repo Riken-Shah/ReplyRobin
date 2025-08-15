@@ -1,6 +1,6 @@
 from typing import List
 from agent_orchestration.master_agent.state import Email
-from common.schemas import CharacterProfile
+from db.schemas import CharacterProfile
 
 
 # TODO: We can inject custom org-specfic instruction to this planner prompt.

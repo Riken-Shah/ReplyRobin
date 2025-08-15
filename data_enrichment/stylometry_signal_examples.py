@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from common.schemas import IntentEnum, ToneEnum
+from db.schemas import ToneEnum
 
 
 # Stylometry signals for a single message

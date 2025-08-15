@@ -9,7 +9,11 @@ from googleapiclient.discovery import build
 from .manage_secret_file import get_secret_file, save_secret_file
 
 # Gmail API Scopes (adjust if needed)
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/gmail.compose",
+]
 
 # Folder to store user tokens
 TOKEN_DIR = pathlib.Path("tokens")
@@ -30,9 +34,7 @@ def get_user_credentials_file(user_email: str):
         save_secret_file(user_email, creds.to_json())
     elif not creds or not creds.valid:
         # Launch browser to get new credentials
-        flow = InstalledAppFlow.from_client_secrets_file(
-            "client_secret_reply_robin.json", SCOPES
-        )
+        flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", SCOPES)
         creds = flow.run_local_server(
             port=3001, access_type="offline", prompt="consent"
         )
