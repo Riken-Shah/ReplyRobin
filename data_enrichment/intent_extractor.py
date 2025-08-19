@@ -9,7 +9,7 @@ from typing import TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 import uuid
 import time
-from reasoning_agent.agent import IntentEnum
+from db.schemas import IntentEnum
 
 
 class Example(TypedDict):

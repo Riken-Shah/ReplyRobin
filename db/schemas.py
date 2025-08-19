@@ -22,19 +22,20 @@ class Base(DeclarativeBase):
     )
 
 
-# class IntentEnum(str, Enum):
-#     """Enum for message intents"""
-#     REPORT_BUG = "report_bug"  # Issues with software functionality
-#     REQUEST_FEATURE = "request_feature"  # Asking for new capabilities
-#     ASK_HOW_TO = "ask_how_to"  # Seeking guidance on usage
-#     REPORT_BILLING = "report_billing_issue"  # Problems with payments
-#     REQUEST_INVOICE = "request_invoice"  # Asking for billing documentation
-#     ACCOUNT_HELP = "account_help"  # Questions about account management
-#     FOLLOW_UP = "follow_up"  # Continuing a previous conversation
-#     CONFIRM_RESOLUTION = "confirm_resolution"  # Verifying an issue was fixed
-#     GENERAL_QUESTION = "general_question"  # Miscellaneous inquiries
-#     FEEDBACK_POSITIVE = "feedback_positive"  # Expressing satisfaction
-#     FEEDBACK_NEGATIVE = "feedback_negative"  # Expressing dissatisfaction
+class IntentEnum(str, Enum):
+    """Enum for message intents"""
+
+    REPORT_BUG = "report_bug"  # Issues with software functionality
+    REQUEST_FEATURE = "request_feature"  # Asking for new capabilities
+    ASK_HOW_TO = "ask_how_to"  # Seeking guidance on usage
+    REPORT_BILLING = "report_billing_issue"  # Problems with payments
+    REQUEST_INVOICE = "request_invoice"  # Asking for billing documentation
+    ACCOUNT_HELP = "account_help"  # Questions about account management
+    FOLLOW_UP = "follow_up"  # Continuing a previous conversation
+    CONFIRM_RESOLUTION = "confirm_resolution"  # Verifying an issue was fixed
+    GENERAL_QUESTION = "general_question"  # Miscellaneous inquiries
+    FEEDBACK_POSITIVE = "feedback_positive"  # Expressing satisfaction
+    FEEDBACK_NEGATIVE = "feedback_negative"  # Expressing dissatisfaction
 
 
 class ToneEnum(str, Enum):
