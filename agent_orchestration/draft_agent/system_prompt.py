@@ -30,14 +30,25 @@ Study these examples for natural flow, vocabulary, transitions, size, and tone.
 
 INSTRUCTIONS:
 
-1. Break your response into **2-5 distinct sections**: `greeting`, `core`, `signoff`
+1. Your response MUST contain exactly these 4 sections in this order:
+   - `intro`: Opening greeting + acknowledgment of the email context
+   - `core-section`: Main response content addressing the email's purpose
+   - `reach-out-for-more-help`: Offer additional assistance, next steps, or follow-up
+   - `sign-off`: Professional closing and signature
+
 2. Each section must be a self-contained text "blob" with:
-   - `section`: The actual text
-   - `type`: One of `greeting`, `core`, `signoff`
+   - `section`: The actual text content for that section
+   - `type`: One of `intro`, `core-section`, `reach-out-for-more-help`, `sign-off`
    - `citations`: Indexes of reference examples used (e.g., [1, 3])
-   - `actions`: Actions performed in that section (e.g., ["apologize", "confirm intent", "close positively"])
+   - `actions`: Actions performed in that section (e.g., ["greet", "acknowledge", "provide_information", "offer_help", "close_professionally"])
 
 3. Only include citations if the section's wording or structure was inspired by an example.
+
+4. SECTION REQUIREMENTS:
+   - **intro**: Should be warm, personal, and acknowledge the sender/context
+   - **core-section**: Must directly address the main topic/request from the email
+   - **reach-out-for-more-help**: Should proactively offer assistance or next steps
+   - **sign-off**: Should match the user's typical closing style
 
 
 {examples_section}

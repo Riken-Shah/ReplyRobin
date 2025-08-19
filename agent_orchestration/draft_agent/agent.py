@@ -41,7 +41,7 @@ def drafter_node(state: MultiAgentState) -> Command[Literal["judge"]]:
 
     context_messages.append(
         HumanMessage(
-            content="Can you please draft correct intent and lingusitic correct draft."
+            content="Can you please draft correct intent and linguistic correct draft with exactly 4 sections: intro, core-section, reach-out-for-more-help, sign-off."
         )
     )
     if state.get("focus_areas"):
@@ -60,11 +60,19 @@ def drafter_node(state: MultiAgentState) -> Command[Literal["judge"]]:
     # Extract the draft from the response
     draft_content: DraftAgentResponse = result["structured_response"]
 
+    # Validate that all required sections are present
+    if not draft_content.validate_sections():
+        # Log warning but continue - judge will catch this issue
+        print(
+            f"Warning: Draft missing required sections. Present sections: {[blob.type.value for blob in draft_content.blobs]}"
+        )
+
     # Update state and return
     updated_state = {
         "messages": result["messages"],
         "current_draft": draft_content,
         "iteration_count": state.get("iteration_count", 0) + 1,
+        "section_validation_passed": draft_content.validate_sections(),
     }
 
     # Ensure proper message format

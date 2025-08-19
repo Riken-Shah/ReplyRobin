@@ -4,9 +4,10 @@ from typing import List
 
 
 class SectionType(Enum):
-    GREETING = "greeting"
-    CORE = "core"
-    SIGNOFF = "signoff"
+    INTRO = "intro"
+    CORE_SECTION = "core-section"
+    REACH_OUT_FOR_MORE_HELP = "reach-out-for-more-help"
+    SIGN_OFF = "sign-off"
 
 
 class DraftBlob(BaseModel):
@@ -34,4 +35,33 @@ class DraftAgentResponse(BaseModel):
     )
 
     def get_draft(self) -> str:
-        return "".join([blob.section for blob in self.blobs])
+        # Ensure sections are in the correct order
+        section_order = [
+            SectionType.INTRO,
+            SectionType.CORE_SECTION,
+            SectionType.REACH_OUT_FOR_MORE_HELP,
+            SectionType.SIGN_OFF,
+        ]
+
+        # Create a mapping of section types to blobs
+        section_map = {blob.type: blob for blob in self.blobs}
+
+        # Build the draft in the correct order
+        ordered_sections = []
+        for section_type in section_order:
+            if section_type in section_map:
+                ordered_sections.append(section_map[section_type].section)
+
+        return "\n\n".join(ordered_sections)
+
+    def validate_sections(self) -> bool:
+        """Validate that all required sections are present"""
+        required_sections = {
+            SectionType.INTRO,
+            SectionType.CORE_SECTION,
+            SectionType.REACH_OUT_FOR_MORE_HELP,
+            SectionType.SIGN_OFF,
+        }
+
+        present_sections = {blob.type for blob in self.blobs}
+        return required_sections.issubset(present_sections)
