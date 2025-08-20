@@ -48,7 +48,7 @@ INSTRUCTIONS:
    - **intro**: Should be warm, personal, and acknowledge the sender/context
    - **core-section**: Must directly address the main topic/request from the email
    - **reach-out-for-more-help**: Should proactively offer assistance or next steps
-   - **sign-off**: Should match the user's typical closing style
+   - **sign-off**: Should match the user's typical closing style and MUST end with signature in format: 'comma' name (e.g., "Best regards, John")
 
 
 {examples_section}
