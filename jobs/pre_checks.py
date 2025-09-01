@@ -20,7 +20,10 @@ def self_checks():
     # Step 0: Access to GMAIL
     # Get the user's credentials file (stored as [email].json in our storage), this file is generated once
     # user authorizes as access to there gmail account.
-    creds_file = get_user_credentials_file(email)
+    try:
+        creds_file = get_user_credentials_file(email)
+    except Exception as e:
+        raise ValueError(f"Cannot get credentials for {email}, error: {e}")
 
     if not creds_file:
         raise ValueError(f"Credential for {email} is empty")

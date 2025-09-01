@@ -20,9 +20,9 @@ class GenericEvaluationRunner:
         if self.eval_engine.verbose:
             print(f"🚀 Starting {self.eval_engine.__class__.__name__} Evaluation...")
             print("📊 Creating evaluation dataset...")
-        
+
         dataset = self.eval_engine.create_dataset()
-        
+
         if self.eval_engine.verbose:
             print(f"✅ Dataset created: {self.eval_engine.dataset_name}")
 
@@ -33,7 +33,9 @@ class GenericEvaluationRunner:
 
         # Print summary
         if not self.eval_engine.verbose:
-            print(f"\nTests: {results['passed_examples']}/{results['total_examples']} passed")
+            print(
+                f"\nTests: {results['passed_examples']}/{results['total_examples']} passed"
+            )
         else:
             print("\n" + "=" * 60)
             print("📈 EVALUATION RESULTS")
@@ -56,11 +58,13 @@ class GenericEvaluationRunner:
                     inputs = result_data["inputs"]
                     original_idx = result_data["example_id"]
                     group_name = self.eval_engine.__class__.__name__.replace("Eval", "")
-                    
+
                     # Get test name from original examples
                     examples = self.eval_engine.get_examples()
-                    test_name = examples[original_idx].get("test_name", f"test_{original_idx + 1}")
-                    
+                    test_name = examples[original_idx].get(
+                        "test_name", f"test_{original_idx + 1}"
+                    )
+
                     print(f"{group_name}.{test_name}:")
                     print(f"  Subject: {inputs['current_email'].subject[:50]}...")
                     if not result.trajectory_correct:

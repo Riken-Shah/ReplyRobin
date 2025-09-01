@@ -33,6 +33,11 @@ class Worker:
         )
 
         current_draft = final_state.get("current_draft", None)
+
+        print(
+            "Final draft after all iterations: ",
+            current_draft.get_draft() if current_draft else None,
+        )
         return WorkerResponseSchema(
             final_draft=current_draft.get_draft() if current_draft else None,
             iteration_count=final_state.get("iteration_count", 0),

@@ -22,7 +22,9 @@ def create_agent(llm, current_email: Email, past_emails: List[Email]):
 
 def planner_node(state: MultiAgentState) -> Command[Literal["drafter"]]:
     """This is a planner node responsible to layout a plan for us to draft the node, it can also decide if we can move ahead or not"""
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash", thinking_config={"include_thoughts": True}
+    )
     planner_agent = create_agent(
         llm,
         state.get("current_email"),
@@ -38,15 +40,21 @@ def planner_node(state: MultiAgentState) -> Command[Literal["drafter"]]:
     planner_response: PlannerAgentResponse = result["structured_response"]
     # TODO add logging of all the plans LLM have come to based on previous emails
     print(f"We found {len(planner_response.possible_strategies)} possible plans.")
-    print(planner_response)
-    pprint("This is the last message: ")
+
+    if planner_response.strategy_selected is not None:
+        print(
+            "Selected plan: ",
+            planner_response.possible_strategies[
+                planner_response.strategy_selected
+            ].stragy,
+        )
 
     # If we cannot figure the suitable plan it is better to drop-out from here.
     selected_plan_cited_emails = (
         planner_response.possible_strategies[
             planner_response.strategy_selected
         ].citation_of_previous_email
-        if planner_response.strategy_selected
+        if planner_response.strategy_selected is not None
         else []
     )
     if not len(selected_plan_cited_emails):

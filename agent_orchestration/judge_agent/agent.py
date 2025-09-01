@@ -46,7 +46,7 @@ def calculate_weighted_score(scores: Scores) -> float:
         if scores_dict[category] is not None:
             weighted_sum += scores_dict[category] * weight
             total_weight += weight
-            print(f"total_weight: {total_weight}")
+            # print(f"total_weight: {total_weight}")
 
     return weighted_sum / total_weight if total_weight > 0 else 0
 
@@ -91,16 +91,6 @@ def judge_node(state: MultiAgentState) -> Command[Literal["drafter", END]]:
     current_scores = {**dict(evaluation.scores), "weighted_total": weighted_score}
 
     focus_areas = evaluation.focus_area_for_next_iteraion
-
-    print(
-        "Judge Model: ",
-        "Current Score: ",
-        current_scores,
-        "Weighted Score: ",
-        weighted_score,
-        "Focus Area: ",
-        focus_areas,
-    )
 
     # Create final response with calculated weighted score
     final_evaluation = (

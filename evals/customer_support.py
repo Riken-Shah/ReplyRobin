@@ -135,14 +135,11 @@ examples = [
             "current_email": Email(
                 subject="💰 Earn $5000/week from home! No experience needed!",
                 body="URGENT: Limited spots available! Make money from home with our proven system. No skills required! Click here to start earning TODAY! This offer expires in 24 hours. Don't miss this life-changing opportunity!",
-                sender="money-maker@get-rich-quick.biz"
+                sender="money-maker@get-rich-quick.biz",
             ),
             "past_emails": garbage_email_past_emails,
         },
-        "outputs": {
-            "final_draft": "",
-            "trajectory": ["planner"]
-        }
+        "outputs": {"final_draft": "", "trajectory": ["planner"]},
     },
     # Case 2: Email with insufficient context - should skip
     {

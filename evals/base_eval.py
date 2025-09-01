@@ -179,15 +179,15 @@ class BaseEval(ABC):
         for i, example in enumerate(examples):
             if not self.verbose:
                 # Get test name from example or use default
-                test_name = example.get("test_name", f"test_{i+1}")
+                test_name = example.get("test_name", f"test_{i + 1}")
                 group_name = self.__class__.__name__.replace("Eval", "")
                 print(f"{group_name}.{test_name} ", end="", flush=True)
             else:
-                test_name = example.get("test_name", f"Example {i+1}")
+                test_name = example.get("test_name", f"Example {i + 1}")
                 print(f"Running evaluation: {test_name}")
-            
+
             result = await self.run_evaluation(example["inputs"], example["outputs"])
-            
+
             if not self.verbose:
                 # Show result inline
                 status = "✅" if result.eval_passed else "❌"
