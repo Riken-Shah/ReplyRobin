@@ -33,6 +33,8 @@ dependencies = [
     "openai>=1.88.0",
     "schedule>=1.2.2",
     "sqlalchemy-migrate>=0.13.0",
+    "cryptography>=44.0.0",
+    "spacy>=3.8.14",
 ]
 
 [dependency-groups]
