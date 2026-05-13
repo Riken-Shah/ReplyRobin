@@ -31,10 +31,27 @@ die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 # True when systemd is the active init (i.e. we can use systemctl).
 have_systemd() { [ -d /run/systemd/system ]; }
 
-[ "$(id -u)" = "0" ] || die "run with sudo (need apt/dnf + systemctl)"
+[ "$(id -u)" = "0" ] || die "must run as root (use sudo if available, otherwise switch user)"
 [ -f /etc/os-release ] || die "cannot detect distro (no /etc/os-release)"
 # shellcheck disable=SC1091
 . /etc/os-release
+
+# Drop privileges to the postgres user. Works with or without sudo (containers,
+# minimal images), falling back through sudo → runuser → su.
+as_postgres() {
+    if command -v sudo >/dev/null 2>&1; then
+        sudo -u postgres "$@"
+    elif command -v runuser >/dev/null 2>&1; then
+        runuser -u postgres -- "$@"
+    else
+        # Last-resort: use su. Quote args safely for the -c string.
+        local cmd=""
+        for arg in "$@"; do
+            cmd+=" $(printf '%q' "$arg")"
+        done
+        su -s /bin/sh postgres -c "$cmd"
+    fi
+}
 
 # Generate a URL/SQL-safe password if none provided.
 if [ -z "$PG_PASS" ]; then
@@ -98,8 +115,8 @@ start_rhel() {
         systemctl enable --now "postgresql-${PG_VERSION}"
     else
         info "no systemd detected — starting cluster directly via pg_ctl"
-        if ! sudo -u postgres pg_isready -h /var/run/postgresql >/dev/null 2>&1; then
-            sudo -u postgres "/usr/pgsql-${PG_VERSION}/bin/pg_ctl" \
+        if ! as_postgres pg_isready -h /var/run/postgresql >/dev/null 2>&1; then
+            as_postgres "/usr/pgsql-${PG_VERSION}/bin/pg_ctl" \
                 -D "$data_dir" -l "${data_dir}/server.log" start
         fi
         info "note: without systemd, restart on boot is not configured — your container/host must start it"
@@ -150,7 +167,7 @@ case "${ID_LIKE:-$ID}" in
 esac
 
 info "creating role '${PG_USER}' and database '${PG_DB}' (idempotent)"
-sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
+as_postgres psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${PG_USER}') THEN
@@ -162,11 +179,11 @@ END
 \$\$;
 SQL
 
-if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${PG_DB}'" | grep -q 1; then
-    sudo -u postgres createdb -O "${PG_USER}" "${PG_DB}"
+if ! as_postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${PG_DB}'" | grep -q 1; then
+    as_postgres createdb -O "${PG_USER}" "${PG_DB}"
 fi
 
-sudo -u postgres psql -d "${PG_DB}" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector;"
+as_postgres psql -d "${PG_DB}" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
 info "verifying connection + pgvector as ${PG_USER}"
 PGPASSWORD="${PG_PASS}" psql -h localhost -U "${PG_USER}" -d "${PG_DB}" \
@@ -196,8 +213,9 @@ EOF
 else
     cat <<EOF
 No systemd on this host (container / WSL). Manage the cluster manually:
-  sudo pg_ctlcluster ${PG_VERSION} main status
-  sudo pg_ctlcluster ${PG_VERSION} main {start|stop|restart}
+  pg_ctlcluster ${PG_VERSION} main status
+  pg_ctlcluster ${PG_VERSION} main {start|stop|restart}
+(prefix with sudo if you're not root)
 
 EOF
 fi
