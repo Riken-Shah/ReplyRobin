@@ -1,13 +1,27 @@
+import os
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
+load_dotenv()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Pull the DB URL from the environment so credentials are never committed.
+postgres_connection = os.getenv("POSTGRES_CONNECTION")
+if postgres_connection:
+    config.set_main_option("sqlalchemy.url", postgres_connection)
+elif not config.get_main_option("sqlalchemy.url"):
+    raise RuntimeError(
+        "POSTGRES_CONNECTION env var is not set and no sqlalchemy.url is "
+        "configured in alembic.ini. See .env.example."
+    )
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
