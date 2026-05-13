@@ -19,8 +19,17 @@ PG_DB="${PG_DB:-replyrobin}"
 PG_USER="${PG_USER:-replyrobin}"
 PG_PASS="${PG_PASS:-}"
 
+# Resolve project root from script location so .env writes go to the right place.
+SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+ENV_FILE="${ENV_FILE:-${PROJECT_ROOT}/.env}"
+
 info() { printf '==> %s\n' "$*"; }
 die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+# True when systemd is the active init (i.e. we can use systemctl).
+have_systemd() { [ -d /run/systemd/system ]; }
 
 [ "$(id -u)" = "0" ] || die "run with sudo (need apt/dnf + systemctl)"
 [ -f /etc/os-release ] || die "cannot detect distro (no /etc/os-release)"
@@ -50,8 +59,21 @@ install_debian() {
 deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main
 EOF
     apt-get update -qq
-    apt-get install -y -qq "postgresql-${PG_VERSION}" "postgresql-${PG_VERSION}-pgvector"
-    systemctl enable --now postgresql
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+        "postgresql-${PG_VERSION}" "postgresql-${PG_VERSION}-pgvector"
+    start_debian
+}
+
+start_debian() {
+    if have_systemd; then
+        systemctl enable --now postgresql
+    else
+        info "no systemd detected — starting cluster directly via pg_ctlcluster"
+        if ! pg_isready -h /var/run/postgresql >/dev/null 2>&1; then
+            pg_ctlcluster "${PG_VERSION}" main start
+        fi
+        info "note: without systemd, restart on boot is not configured — your container/host must start it"
+    fi
 }
 
 install_rhel() {
@@ -67,7 +89,58 @@ install_rhel() {
     if [ ! -f "${data_dir}/PG_VERSION" ]; then
         "/usr/pgsql-${PG_VERSION}/bin/postgresql-${PG_VERSION}-setup" initdb
     fi
-    systemctl enable --now "postgresql-${PG_VERSION}"
+    start_rhel "$data_dir"
+}
+
+start_rhel() {
+    local data_dir="$1"
+    if have_systemd; then
+        systemctl enable --now "postgresql-${PG_VERSION}"
+    else
+        info "no systemd detected — starting cluster directly via pg_ctl"
+        if ! sudo -u postgres pg_isready -h /var/run/postgresql >/dev/null 2>&1; then
+            sudo -u postgres "/usr/pgsql-${PG_VERSION}/bin/pg_ctl" \
+                -D "$data_dir" -l "${data_dir}/server.log" start
+        fi
+        info "note: without systemd, restart on boot is not configured — your container/host must start it"
+    fi
+}
+
+write_env_file() {
+    local conn="$1"
+    local seed_from=""
+
+    if [ ! -f "$ENV_FILE" ]; then
+        if [ -f "${PROJECT_ROOT}/.env.example" ]; then
+            seed_from="${PROJECT_ROOT}/.env.example"
+            cp "$seed_from" "$ENV_FILE"
+        else
+            : > "$ENV_FILE"
+        fi
+    fi
+
+    # Replace any existing POSTGRES_CONNECTION= line; append if absent.
+    local tmp
+    tmp="$(mktemp)"
+    if grep -q '^POSTGRES_CONNECTION=' "$ENV_FILE"; then
+        sed "s|^POSTGRES_CONNECTION=.*|POSTGRES_CONNECTION=${conn}|" "$ENV_FILE" > "$tmp"
+    else
+        cp "$ENV_FILE" "$tmp"
+        printf '\nPOSTGRES_CONNECTION=%s\n' "$conn" >> "$tmp"
+    fi
+    mv "$tmp" "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+
+    # Running under sudo? Hand .env ownership back to the invoking user.
+    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+        chown "${SUDO_USER}:" "$ENV_FILE"
+    fi
+
+    if [ -n "$seed_from" ]; then
+        info "created ${ENV_FILE} from .env.example"
+    else
+        info "updated POSTGRES_CONNECTION in ${ENV_FILE}"
+    fi
 }
 
 case "${ID_LIKE:-$ID}" in
@@ -101,16 +174,30 @@ PGPASSWORD="${PG_PASS}" psql -h localhost -U "${PG_USER}" -d "${PG_DB}" \
     | grep -q vector \
     || die "verification failed — pgvector not loaded"
 
+CONNECTION_STRING="postgresql://${PG_USER}:${PG_PASS}@localhost:5432/${PG_DB}"
+write_env_file "$CONNECTION_STRING"
+
 cat <<EOF
 
 Postgres ${PG_VERSION} + pgvector ready.
+POSTGRES_CONNECTION written to ${ENV_FILE}
 
-Add this line to your .env (and run \`make migrate\`):
+Next: run \`make migrate\` to apply Alembic migrations.
 
-  POSTGRES_CONNECTION=postgresql://${PG_USER}:${PG_PASS}@localhost:5432/${PG_DB}
+EOF
 
-systemd is managing the daemon — it will restart on boot and on crash:
+if have_systemd; then
+    cat <<EOF
+systemd is managing the daemon — restart on boot and on crash:
   systemctl status postgresql
   journalctl -u postgresql -f
 
 EOF
+else
+    cat <<EOF
+No systemd on this host (container / WSL). Manage the cluster manually:
+  sudo pg_ctlcluster ${PG_VERSION} main status
+  sudo pg_ctlcluster ${PG_VERSION} main {start|stop|restart}
+
+EOF
+fi
